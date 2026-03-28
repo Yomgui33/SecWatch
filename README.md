@@ -31,13 +31,9 @@ NVD_API_KEY=
 # Puis copier les valeurs REST depuis l'onglet "REST API"
 KV_REST_API_URL=
 KV_REST_API_TOKEN=
-
-# Twitter/X — cookies de session pour l'API interne
-# Dans le navigateur : F12 > Application > Cookies > https://x.com
-# Copier les valeurs de "auth_token" et "ct0"
-X_AUTH_TOKEN=
-X_CT0=
 ```
+
+Les credentials Twitter/X se configurent depuis la page `/admin` de l'application.
 
 ## Lancement en mode dev
 
