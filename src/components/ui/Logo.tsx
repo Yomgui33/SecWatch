@@ -29,7 +29,7 @@ export default function Logo() {
       alt="SecWatch"
       width={120}
       height={36}
-      className="h-9 w-auto"
+      style={{ width: "auto", height: "36px" }}
       priority
     />
   );

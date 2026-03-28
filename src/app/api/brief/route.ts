@@ -5,6 +5,7 @@ import { getRssFeeds, getReadIds, saveRssFeeds } from "@/lib/sources/rss/feeds";
 import { DEFAULT_FEEDS } from "@/lib/sources/rss/seed";
 import { fetchHomeTimeline } from "@/lib/sources/twitter/api";
 import { getXCredentials } from "@/lib/sources/twitter/credentials";
+import { getBriefReadIds } from "@/lib/sources/brief/read";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +13,8 @@ export async function GET() {
   const range = getDateRange("24h");
   const h24Ago = new Date(range.start).getTime();
 
-  // Fetch all sources in parallel
-  const [cvesResult, rssResult, tweetsResult] = await Promise.allSettled([
+  // Fetch all sources + read states in parallel
+  const [cvesResult, rssResult, tweetsResult, cveReadResult, tweetReadResult] = await Promise.allSettled([
     // CVEs critiques des dernières 24h
     fetchCves({
       pubStartDate: range.start,
@@ -46,6 +47,10 @@ export async function GET() {
         return { tweets: [], error: "fetch_failed" as const };
       }
     })(),
+
+    // Read states
+    getBriefReadIds("cves"),
+    getBriefReadIds("tweets"),
   ]);
 
   // CVEs — critical only
@@ -67,11 +72,16 @@ export async function GET() {
     (t) => new Date(t.published).getTime() >= h24Ago
   );
 
+  const cveReadIds = cveReadResult.status === "fulfilled" ? cveReadResult.value : [];
+  const tweetReadIds = tweetReadResult.status === "fulfilled" ? tweetReadResult.value : [];
+
   return NextResponse.json({
     cves,
     rssArticles,
-    readIds,
+    rssReadIds: readIds,
     tweets,
     twitterError: tweetsData.error,
+    cveReadIds,
+    tweetReadIds,
   });
 }

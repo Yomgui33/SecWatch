@@ -11,12 +11,24 @@ import TweetCard from "@/components/news/TweetCard";
 interface BriefData {
   cves: CveEntry[];
   rssArticles: RssArticle[];
-  readIds: string[];
+  rssReadIds: string[];
   tweets: TweetEntry[];
   twitterError: string | null;
+  cveReadIds: string[];
+  tweetReadIds: string[];
 }
 
-function SectionHeader({ title, count, icon }: { title: string; count: number; icon: string }) {
+function SectionHeader({
+  title,
+  count,
+  icon,
+  onMarkAllRead,
+}: {
+  title: string;
+  count: number;
+  icon: string;
+  onMarkAllRead: () => void;
+}) {
   return (
     <div className="flex items-center gap-2 mb-3">
       <span className="text-base">{icon}</span>
@@ -26,13 +38,32 @@ function SectionHeader({ title, count, icon }: { title: string; count: number; i
       <span className="px-2 py-0.5 text-xs rounded-full bg-surface-alt text-text-muted font-medium">
         {count}
       </span>
+      <button
+        onClick={onMarkAllRead}
+        className="ml-auto px-3 py-1 text-xs rounded-md border border-border text-text-muted hover:bg-surface-hover hover:text-text-secondary transition-colors cursor-pointer"
+      >
+        Tout marquer lu
+      </button>
     </div>
+  );
+}
+
+function MarkReadButton({ read, onToggle }: { read: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      className="mt-1 text-xs text-text-muted hover:text-accent transition-colors cursor-pointer"
+    >
+      {read ? "Marquer non lu" : "Marquer lu"}
+    </button>
   );
 }
 
 export default function BriefDashboard() {
   const [data, setData] = useState<BriefData | null>(null);
-  const [readIdsSet, setReadIdsSet] = useState<Set<string>>(new Set());
+  const [rssReadIds, setRssReadIds] = useState<Set<string>>(new Set());
+  const [cveReadIds, setCveReadIds] = useState<Set<string>>(new Set());
+  const [tweetReadIds, setTweetReadIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,9 +72,11 @@ export default function BriefDashboard() {
       try {
         const res = await fetch("/api/brief");
         if (!res.ok) throw new Error();
-        const json = await res.json();
+        const json: BriefData = await res.json();
         setData(json);
-        setReadIdsSet(new Set(json.readIds ?? []));
+        setRssReadIds(new Set(json.rssReadIds ?? []));
+        setCveReadIds(new Set(json.cveReadIds ?? []));
+        setTweetReadIds(new Set(json.tweetReadIds ?? []));
       } catch {
         setError("Impossible de charger le brief.");
       } finally {
@@ -52,28 +85,58 @@ export default function BriefDashboard() {
     })();
   }, []);
 
-  const handleToggleRead = async (id: string, read: boolean) => {
-    setReadIdsSet((prev) => {
-      const next = new Set(prev);
-      if (read) next.add(id);
-      else next.delete(id);
-      return next;
-    });
-    try {
-      await fetch("/api/news/rss/read", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, read }),
-      });
-    } catch {
-      setReadIdsSet((prev) => {
+  // --- Generic toggle helpers ---
+
+  const toggleRead = (
+    setter: React.Dispatch<React.SetStateAction<Set<string>>>,
+    endpoint: string,
+    body: Record<string, unknown>
+  ) => {
+    return async (id: string, read: boolean) => {
+      setter((prev) => {
         const next = new Set(prev);
-        if (read) next.delete(id);
-        else next.add(id);
+        if (read) next.add(id);
+        else next.delete(id);
         return next;
       });
-    }
+      try {
+        await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...body, id, read }),
+        });
+      } catch {
+        setter((prev) => {
+          const next = new Set(prev);
+          if (read) next.delete(id);
+          else next.add(id);
+          return next;
+        });
+      }
+    };
   };
+
+  const markAllRead = (
+    ids: string[],
+    setter: React.Dispatch<React.SetStateAction<Set<string>>>,
+    endpoint: string,
+    body: Record<string, unknown>
+  ) => {
+    return async () => {
+      setter((prev) => new Set([...prev, ...ids]));
+      try {
+        await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...body, ids }),
+        });
+      } catch { /* optimistic */ }
+    };
+  };
+
+  const handleCveToggle = toggleRead(setCveReadIds, "/api/brief/read", { source: "cves" });
+  const handleTweetToggle = toggleRead(setTweetReadIds, "/api/brief/read", { source: "tweets" });
+  const handleRssToggle = toggleRead(setRssReadIds, "/api/news/rss/read", {});
 
   if (loading) {
     return (
@@ -101,7 +164,10 @@ export default function BriefDashboard() {
     );
   }
 
-  const isEmpty = data.cves.length === 0 && data.rssArticles.length === 0 && data.tweets.length === 0;
+  const unreadCves = data.cves.filter((c) => !cveReadIds.has(c.id));
+  const unreadArticles = data.rssArticles.filter((a) => !rssReadIds.has(a.id));
+  const unreadTweets = data.tweets.filter((t) => !tweetReadIds.has(t.id));
+  const isEmpty = unreadCves.length === 0 && unreadArticles.length === 0 && unreadTweets.length === 0;
 
   return (
     <div className="space-y-10">
@@ -112,28 +178,54 @@ export default function BriefDashboard() {
       )}
 
       {/* CVEs critiques */}
-      {data.cves.length > 0 && (
+      {unreadCves.length > 0 && (
         <section>
-          <SectionHeader title="Vulnérabilités critiques" count={data.cves.length} icon="🔴" />
+          <SectionHeader
+            title="Vulnérabilités critiques"
+            count={unreadCves.length}
+            icon="🔴"
+            onMarkAllRead={markAllRead(
+              unreadCves.map((c) => c.id),
+              setCveReadIds,
+              "/api/brief/read",
+              { source: "cves" }
+            )}
+          />
           <div className="space-y-3">
-            {data.cves.map((cve) => (
-              <CveCard key={cve.id} cve={cve} />
+            {unreadCves.map((cve) => (
+              <div key={cve.id}>
+                <CveCard cve={cve} />
+                <MarkReadButton
+                  read={false}
+                  onToggle={() => handleCveToggle(cve.id, true)}
+                />
+              </div>
             ))}
           </div>
         </section>
       )}
 
       {/* Articles RSS */}
-      {data.rssArticles.length > 0 && (
+      {unreadArticles.length > 0 && (
         <section>
-          <SectionHeader title="Articles RSS" count={data.rssArticles.length} icon="📰" />
+          <SectionHeader
+            title="Articles RSS"
+            count={unreadArticles.length}
+            icon="📰"
+            onMarkAllRead={markAllRead(
+              unreadArticles.map((a) => a.id),
+              setRssReadIds,
+              "/api/news/rss/read",
+              {}
+            )}
+          />
           <div className="space-y-3">
-            {data.rssArticles.map((article) => (
+            {unreadArticles.map((article) => (
               <RssArticleCard
                 key={article.id}
                 article={article}
-                read={readIdsSet.has(article.id)}
-                onToggleRead={handleToggleRead}
+                read={false}
+                onToggleRead={handleRssToggle}
               />
             ))}
           </div>
@@ -141,12 +233,28 @@ export default function BriefDashboard() {
       )}
 
       {/* Tweets */}
-      {data.tweets.length > 0 && (
+      {unreadTweets.length > 0 && (
         <section>
-          <SectionHeader title="Twitter / X" count={data.tweets.length} icon="🐦" />
+          <SectionHeader
+            title="Twitter / X"
+            count={unreadTweets.length}
+            icon="🐦"
+            onMarkAllRead={markAllRead(
+              unreadTweets.map((t) => t.id),
+              setTweetReadIds,
+              "/api/brief/read",
+              { source: "tweets" }
+            )}
+          />
           <div className="space-y-3">
-            {data.tweets.map((tweet) => (
-              <TweetCard key={tweet.id} tweet={tweet} />
+            {unreadTweets.map((tweet) => (
+              <div key={tweet.id}>
+                <TweetCard tweet={tweet} />
+                <MarkReadButton
+                  read={false}
+                  onToggle={() => handleTweetToggle(tweet.id, true)}
+                />
+              </div>
             ))}
           </div>
         </section>
