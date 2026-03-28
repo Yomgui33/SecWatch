@@ -1,4 +1,5 @@
 import XCredentialsForm from "@/components/admin/XCredentialsForm";
+import RssFeedsManager from "@/components/admin/RssFeedsManager";
 
 export const metadata = {
   title: "Admin — SecWatch",
@@ -14,7 +15,7 @@ export default function AdminPage() {
         </p>
       </div>
 
-      <section className="space-y-4">
+      <section className="space-y-4 mb-12">
         <h3 className="text-base font-medium">Connexion Twitter / X</h3>
         <p className="text-sm text-text-secondary leading-relaxed">
           SecWatch utilise les cookies de votre session X pour afficher votre fil
@@ -22,6 +23,15 @@ export default function AdminPage() {
           permet de les renouveler.
         </p>
         <XCredentialsForm />
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="text-base font-medium">Flux RSS</h3>
+        <p className="text-sm text-text-secondary leading-relaxed">
+          Gérez vos abonnements RSS. Les articles sont rafraîchis toutes les 30
+          minutes.
+        </p>
+        <RssFeedsManager />
       </section>
     </div>
   );

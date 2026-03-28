@@ -14,6 +14,6 @@ export type NewsSource = "twitter" | "rss" | "linkedin";
 export type NewsDateFilter = "24h" | "all";
 
 export interface NewsFilters {
-  sources: NewsSource[];
+  activeSource: NewsSource;
   dateFilter: NewsDateFilter;
 }

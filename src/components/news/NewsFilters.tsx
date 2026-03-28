@@ -4,7 +4,7 @@ import type { NewsSource, NewsDateFilter, NewsFilters as Filters } from "@/lib/s
 
 const SOURCE_OPTIONS: { value: NewsSource; label: string; active: boolean }[] = [
   { value: "twitter", label: "Twitter / X", active: true },
-  { value: "rss", label: "RSS", active: false },
+  { value: "rss", label: "RSS", active: true },
   { value: "linkedin", label: "LinkedIn", active: false },
 ];
 
@@ -17,17 +17,10 @@ interface Props {
   filters: Filters;
   onChange: (filters: Filters) => void;
   totalResults: number;
+  unreadCount?: number;
 }
 
-export default function NewsFilters({ filters, onChange, totalResults }: Props) {
-  const toggleSource = (source: NewsSource) => {
-    const current = filters.sources;
-    const next = current.includes(source)
-      ? current.filter((s) => s !== source)
-      : [...current, source];
-    onChange({ ...filters, sources: next });
-  };
-
+export default function NewsFilters({ filters, onChange, totalResults, unreadCount }: Props) {
   return (
     <div className="space-y-4">
       {/* Sources */}
@@ -37,7 +30,7 @@ export default function NewsFilters({ filters, onChange, totalResults }: Props) 
         </h3>
         <div className="flex flex-wrap gap-1.5">
           {SOURCE_OPTIONS.map((opt) => {
-            const isActive = filters.sources.includes(opt.value);
+            const isActive = filters.activeSource === opt.value;
             if (!opt.active) {
               return (
                 <span
@@ -52,7 +45,7 @@ export default function NewsFilters({ filters, onChange, totalResults }: Props) 
             return (
               <button
                 key={opt.value}
-                onClick={() => toggleSource(opt.value)}
+                onClick={() => onChange({ ...filters, activeSource: opt.value })}
                 className={`px-3 py-1.5 text-xs rounded-md border transition-colors cursor-pointer ${
                   isActive
                     ? "border-accent bg-accent-light text-accent font-medium"
@@ -90,7 +83,11 @@ export default function NewsFilters({ filters, onChange, totalResults }: Props) 
 
       {/* Compteur */}
       <div className="text-xs text-text-muted">
-        {totalResults} publication{totalResults !== 1 ? "s" : ""}
+        {totalResults} {filters.activeSource === "rss" ? "article" : "publication"}
+        {totalResults !== 1 ? "s" : ""}
+        {unreadCount !== undefined && filters.activeSource === "rss" && (
+          <span> &middot; {unreadCount} non lu{unreadCount !== 1 ? "s" : ""}</span>
+        )}
       </div>
     </div>
   );

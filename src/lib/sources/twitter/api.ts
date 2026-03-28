@@ -145,7 +145,6 @@ export async function fetchHomeTimeline(
     count,
     includePromotedContent: false,
     latestControlAvailable: true,
-    requestContext: "launch",
   });
 
   const params = new URLSearchParams({
