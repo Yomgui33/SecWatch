@@ -20,6 +20,9 @@ function timeAgo(iso: string): string {
 }
 
 export default function TweetCard({ tweet }: { tweet: TweetEntry }) {
+  const hasMedia = tweet.media.length > 0;
+  const hasCard = tweet.card && !hasMedia;
+
   return (
     <article className="border border-border rounded-lg p-4 hover:bg-surface-hover transition-colors">
       <div className="flex items-start gap-3">
@@ -53,7 +56,7 @@ export default function TweetCard({ tweet }: { tweet: TweetEntry }) {
           </p>
 
           {/* Media */}
-          {tweet.media.length > 0 && (
+          {hasMedia && (
             <div className={`grid gap-2 mb-2 ${tweet.media.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
               {tweet.media.slice(0, 4).map((url, i) => (
                 <a key={i} href={tweet.url} target="_blank" rel="noopener noreferrer">
@@ -67,6 +70,41 @@ export default function TweetCard({ tweet }: { tweet: TweetEntry }) {
                 </a>
               ))}
             </div>
+          )}
+
+          {/* Link preview card */}
+          {hasCard && (
+            <a
+              href={tweet.card!.linkUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block border border-border rounded-lg overflow-hidden hover:bg-surface-alt transition-colors mb-2"
+            >
+              {tweet.card!.imageUrl && (
+                <div className="bg-surface-alt">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={tweet.card!.imageUrl}
+                    alt=""
+                    className="w-full max-h-64 object-contain"
+                    loading="lazy"
+                  />
+                </div>
+              )}
+              <div className="px-3 py-2.5">
+                <p className="text-xs text-text-muted mb-0.5">
+                  {tweet.card!.domain}
+                </p>
+                <p className="text-sm font-medium text-text-primary leading-snug line-clamp-2">
+                  {tweet.card!.title}
+                </p>
+                {tweet.card!.description && (
+                  <p className="text-xs text-text-secondary mt-0.5 line-clamp-2">
+                    {tweet.card!.description}
+                  </p>
+                )}
+              </div>
+            </a>
           )}
 
           {/* Link to original */}

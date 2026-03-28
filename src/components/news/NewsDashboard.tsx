@@ -10,10 +10,22 @@ import RssArticleCard from "./RssArticleCard";
 import RssFeedFilter from "./RssFeedFilter";
 
 export default function NewsDashboard() {
+  const DEFAULT_DATE: Record<string, FiltersType["dateFilter"]> = {
+    twitter: "24h",
+    rss: "all",
+  };
+
   const [filters, setFilters] = useState<FiltersType>({
     activeSource: "twitter",
-    dateFilter: "all",
+    dateFilter: "24h",
   });
+
+  const handleFiltersChange = (next: FiltersType) => {
+    if (next.activeSource !== filters.activeSource) {
+      next = { ...next, dateFilter: DEFAULT_DATE[next.activeSource] ?? "all" };
+    }
+    setFilters(next);
+  };
 
   // --- Twitter state ---
   const [tweets, setTweets] = useState<TweetEntry[]>([]);
@@ -28,7 +40,7 @@ export default function NewsDashboard() {
   const [rssLoading, setRssLoading] = useState(false);
   const [rssError, setRssError] = useState<string | null>(null);
   const [selectedFeeds, setSelectedFeeds] = useState<Set<string>>(new Set());
-  const [hideRead, setHideRead] = useState(false);
+  const [hideRead, setHideRead] = useState(true);
   const rssFetched = useRef(false);
 
   // --- Fetch Twitter ---
@@ -184,7 +196,7 @@ export default function NewsDashboard() {
     <div className="space-y-6">
       <NewsFilters
         filters={filters}
-        onChange={setFilters}
+        onChange={handleFiltersChange}
         totalResults={filters.activeSource === "twitter" ? filteredTweets.length : filteredRss.length}
         unreadCount={filters.activeSource === "rss" ? rssUnreadCount : undefined}
       />

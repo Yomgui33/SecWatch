@@ -1,3 +1,11 @@
+export interface TweetCard {
+  title: string;
+  description?: string;
+  imageUrl?: string;
+  linkUrl: string;
+  domain: string;
+}
+
 export interface TweetEntry {
   id: string;
   source: "twitter";
@@ -7,6 +15,7 @@ export interface TweetEntry {
   published: string;
   url: string;
   media: string[];
+  card?: TweetCard;
 }
 
 export type NewsSource = "twitter" | "rss" | "linkedin";

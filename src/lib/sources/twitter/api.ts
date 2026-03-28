@@ -1,4 +1,4 @@
-import type { TweetEntry } from "./types";
+import type { TweetEntry, TweetCard } from "./types";
 
 // Bearer token public de l'app web Twitter (identique pour tous les utilisateurs)
 const BEARER_TOKEN =
@@ -42,6 +42,12 @@ interface TweetLegacy {
   id_str?: string;
   entities?: { media?: MediaEntity[]; urls?: UrlEntity[] };
   extended_entities?: { media?: MediaEntity[] };
+  retweeted_status_result?: { result?: TweetResult };
+}
+
+interface CardBindingValue {
+  key: string;
+  value: { string_value?: string; image_value?: { url?: string }; type?: string };
 }
 
 interface TweetResult {
@@ -59,7 +65,56 @@ interface TweetResult {
     };
   };
   legacy?: TweetLegacy;
+  note_tweet?: {
+    note_tweet_results?: {
+      result?: {
+        text?: string;
+        entity_set?: { urls?: UrlEntity[] };
+      };
+    };
+  };
   tweet?: TweetResult;
+  card?: {
+    legacy?: {
+      binding_values?: CardBindingValue[];
+      name?: string;
+    };
+  };
+}
+
+function parseCard(tweetResult: TweetResult): TweetCard | undefined {
+  const bindings = tweetResult.card?.legacy?.binding_values;
+  if (!bindings || bindings.length === 0) return undefined;
+
+  const vals = new Map<string, CardBindingValue["value"]>();
+  for (const b of bindings) vals.set(b.key, b.value);
+
+  const title = vals.get("title")?.string_value;
+  const linkUrl =
+    vals.get("card_url")?.string_value ||
+    vals.get("url")?.string_value;
+  if (!title || !linkUrl) return undefined;
+
+  const imageUrl =
+    vals.get("thumbnail_image_original")?.image_value?.url ||
+    vals.get("summary_photo_image_original")?.image_value?.url ||
+    vals.get("thumbnail_image_x_large")?.image_value?.url ||
+    vals.get("summary_photo_image_x_large")?.image_value?.url ||
+    vals.get("thumbnail_image")?.image_value?.url ||
+    vals.get("summary_photo_image")?.image_value?.url;
+
+  const domain =
+    vals.get("domain")?.string_value ||
+    vals.get("vanity_url")?.string_value ||
+    (() => { try { return new URL(linkUrl).hostname; } catch { return ""; } })();
+
+  return {
+    title,
+    description: vals.get("description")?.string_value,
+    imageUrl,
+    linkUrl,
+    domain: domain || "",
+  };
 }
 
 function parseTweetResult(tweet: TweetResult): TweetEntry | null {
@@ -82,12 +137,37 @@ function parseTweetResult(tweet: TweetResult): TweetEntry | null {
     if (m.media_url_https) media.push(m.media_url_https);
   }
 
-  // Nettoyer le texte
-  let content = legacy.full_text || "";
+  // Retweet : récupérer le contenu complet depuis le tweet original
+  const rt = legacy.retweeted_status_result?.result;
+  const rtActual = rt?.tweet || rt;
+  const rtLegacy = rtActual?.legacy;
+  const rtNoteTweet = rtActual?.note_tweet?.note_tweet_results?.result;
+
+  // Card (link preview) — priorité au RT s'il existe
+  const card = parseCard(rtActual ?? actual);
+
+  // Texte complet : notetweet > full_text, en priorité depuis le RT
+  const noteTweet = actual.note_tweet?.note_tweet_results?.result;
+  const fullText =
+    rtNoteTweet?.text ||
+    rtLegacy?.full_text ||
+    noteTweet?.text ||
+    legacy.full_text ||
+    "";
+  let content = rtLegacy
+    ? `RT @${rtActual?.core?.user_results?.result?.legacy?.screen_name ?? ""}: ${fullText}`
+    : fullText;
+  const urlEntities =
+    rtNoteTweet?.entity_set?.urls ??
+    rtLegacy?.entities?.urls ??
+    noteTweet?.entity_set?.urls ??
+    legacy.entities?.urls ??
+    [];
+
   // Retirer les t.co finaux (liens médias)
   content = content.replace(/\s*https:\/\/t\.co\/\w+\s*$/g, "").trim();
   // Remplacer les t.co restants par les URLs complètes
-  for (const u of legacy.entities?.urls ?? []) {
+  for (const u of urlEntities) {
     if (u.url && u.expanded_url) {
       content = content.replace(u.url, u.expanded_url);
     }
@@ -106,6 +186,7 @@ function parseTweetResult(tweet: TweetResult): TweetEntry | null {
       : new Date().toISOString(),
     url: `https://x.com/${authorHandle}/status/${tweetId}`,
     media,
+    card,
   };
 }
 
@@ -134,7 +215,7 @@ const HOME_LATEST_FEATURES = JSON.stringify({
   rweb_video_timestamps_enabled: true,
   longform_notetweets_rich_text_read_enabled: true,
   longform_notetweets_inline_media_enabled: true,
-  responsive_web_enhance_cards_enabled: false,
+  responsive_web_enhance_cards_enabled: true,
 });
 
 export async function fetchHomeTimeline(
@@ -177,8 +258,20 @@ export async function fetchHomeTimeline(
     if (instruction.type !== "TimelineAddEntries") continue;
 
     for (const entry of instruction.entries ?? []) {
-      const tweetResult =
-        entry.content?.itemContent?.tweet_results?.result;
+      // Filtrer le contenu promu et les suggestions algorithmiques
+      const entryId: string = entry.entryId ?? "";
+      if (!entryId.startsWith("tweet-") && !entryId.startsWith("homeConversation-")) continue;
+
+      const itemContent = entry.content?.itemContent;
+      if (!itemContent) continue;
+
+      // Ignorer les tweets sponsorisés
+      if (itemContent.promotedMetadata) continue;
+
+      // Ignorer les suggestions "qui suivre", topics, etc.
+      if (itemContent.socialContext?.type === "Suggest") continue;
+
+      const tweetResult = itemContent.tweet_results?.result;
       if (!tweetResult) continue;
 
       const parsed = parseTweetResult(tweetResult);
