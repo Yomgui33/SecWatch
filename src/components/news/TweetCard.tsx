@@ -1,0 +1,88 @@
+import type { TweetEntry } from "@/lib/sources/twitter/types";
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 60) return `${minutes}min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  return `${days}j`;
+}
+
+export default function TweetCard({ tweet }: { tweet: TweetEntry }) {
+  return (
+    <article className="border border-border rounded-lg p-4 hover:bg-surface-hover transition-colors">
+      <div className="flex items-start gap-3">
+        {/* Avatar placeholder */}
+        <div className="shrink-0 w-10 h-10 rounded-full bg-accent-light flex items-center justify-center text-accent text-sm font-semibold">
+          {tweet.author.charAt(0).toUpperCase()}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          {/* Header */}
+          <div className="flex items-baseline gap-2 mb-1">
+            <span className="text-sm font-semibold text-text-primary truncate">
+              {tweet.author}
+            </span>
+            <a
+              href={`https://x.com/${tweet.authorHandle}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-text-muted hover:text-accent transition-colors shrink-0"
+            >
+              @{tweet.authorHandle}
+            </a>
+            <span className="text-xs text-text-muted shrink-0" title={formatDate(tweet.published)}>
+              {timeAgo(tweet.published)}
+            </span>
+          </div>
+
+          {/* Content */}
+          <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-line mb-2">
+            {tweet.content}
+          </p>
+
+          {/* Media */}
+          {tweet.media.length > 0 && (
+            <div className={`grid gap-2 mb-2 ${tweet.media.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+              {tweet.media.slice(0, 4).map((url, i) => (
+                <a key={i} href={tweet.url} target="_blank" rel="noopener noreferrer">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt=""
+                    className="rounded-md border border-border w-full h-auto max-h-64 object-cover"
+                    loading="lazy"
+                  />
+                </a>
+              ))}
+            </div>
+          )}
+
+          {/* Link to original */}
+          <a
+            href={tweet.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-accent transition-colors"
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 3H3v10h10v-3M9 2h5v5M8 8l6-6" />
+            </svg>
+            Voir sur X
+          </a>
+        </div>
+      </div>
+    </article>
+  );
+}

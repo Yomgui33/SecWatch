@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme {
+  /* Palette sobre et élégante */
+  --color-surface: #ffffff;
+  --color-surface-alt: #f8f8f8;
+  --color-surface-hover: #f0f0f0;
+  --color-border: #e2e2e2;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #6b6b6b;
+  --color-text-muted: #999999;
+  --color-accent: #2c5282;
+  --color-accent-light: #ebf0f7;
+
+  /* Sévérité CVSS — tons sourds, pas néon */
+  --color-severity-critical: #9b2c2c;
+  --color-severity-critical-bg: #fdf2f2;
+  --color-severity-high: #c05621;
+  --color-severity-high-bg: #fefcf3;
+  --color-severity-medium: #975a16;
+  --color-severity-medium-bg: #fefdf5;
+  --color-severity-low: #2b6cb0;
+  --color-severity-low-bg: #f0f5fb;
+  --color-severity-none: #718096;
+  --color-severity-none-bg: #f7f7f8;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+/* Variables dark mode */
+.dark {
+  --color-surface: #161618;
+  --color-surface-alt: #1e1e21;
+  --color-surface-hover: #27272b;
+  --color-border: #2e2e33;
+  --color-text-primary: #e8e8e8;
+  --color-text-secondary: #a0a0a0;
+  --color-text-muted: #6b6b6b;
+  --color-accent: #6b9bd2;
+  --color-accent-light: #1c2a3d;
+
+  --color-severity-critical: #e57373;
+  --color-severity-critical-bg: #2a1a1a;
+  --color-severity-high: #e0915a;
+  --color-severity-high-bg: #2a2015;
+  --color-severity-medium: #d4a84b;
+  --color-severity-medium-bg: #2a2515;
+  --color-severity-low: #6b9bd2;
+  --color-severity-low-bg: #1a2230;
+  --color-severity-none: #8a8a9a;
+  --color-severity-none-bg: #1e1e23;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar discrète */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
