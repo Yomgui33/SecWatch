@@ -1,4 +1,4 @@
-import type { TweetEntry } from "@/lib/sources/twitter/types";
+import type { TweetEntry, QuotedTweet } from "@/lib/sources/twitter/types";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("fr-FR", {
@@ -19,17 +19,80 @@ function timeAgo(iso: string): string {
   return `${days}j`;
 }
 
+function Avatar({ src, name }: { src?: string; name: string }) {
+  if (src) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={name}
+        className="shrink-0 w-10 h-10 rounded-full bg-surface-alt"
+        loading="lazy"
+      />
+    );
+  }
+  return (
+    <div className="shrink-0 w-10 h-10 rounded-full bg-accent-light flex items-center justify-center text-accent text-sm font-semibold">
+      {name.charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
+function QuotedTweetBlock({ qt }: { qt: QuotedTweet }) {
+  return (
+    <a
+      href={qt.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block border border-border rounded-lg p-3 hover:bg-surface-alt transition-colors mb-2"
+    >
+      <div className="flex items-center gap-2 mb-1.5">
+        {qt.avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={qt.avatarUrl}
+            alt={qt.author}
+            className="w-5 h-5 rounded-full bg-surface-alt"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-5 h-5 rounded-full bg-accent-light flex items-center justify-center text-accent text-[10px] font-semibold">
+            {qt.author.charAt(0).toUpperCase()}
+          </div>
+        )}
+        <span className="text-xs font-semibold text-text-primary">{qt.author}</span>
+        <span className="text-xs text-text-muted">@{qt.authorHandle}</span>
+        <span className="text-xs text-text-muted">&middot; {timeAgo(qt.published)}</span>
+      </div>
+      <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-line">
+        {qt.content}
+      </p>
+      {qt.media.length > 0 && (
+        <div className={`grid gap-2 mt-2 ${qt.media.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+          {qt.media.slice(0, 4).map((url, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={i}
+              src={url}
+              alt=""
+              className="rounded-md border border-border w-full h-auto max-h-96 object-contain"
+              loading="lazy"
+            />
+          ))}
+        </div>
+      )}
+    </a>
+  );
+}
+
 export default function TweetCard({ tweet }: { tweet: TweetEntry }) {
   const hasMedia = tweet.media.length > 0;
-  const hasCard = tweet.card && !hasMedia;
+  const hasCard = tweet.card && !hasMedia && !tweet.quoted;
 
   return (
     <article className="border border-border rounded-lg p-4 hover:bg-surface-hover transition-colors">
       <div className="flex items-start gap-3">
-        {/* Avatar placeholder */}
-        <div className="shrink-0 w-10 h-10 rounded-full bg-accent-light flex items-center justify-center text-accent text-sm font-semibold">
-          {tweet.author.charAt(0).toUpperCase()}
-        </div>
+        <Avatar src={tweet.avatarUrl} name={tweet.author} />
 
         <div className="flex-1 min-w-0">
           {/* Header */}
@@ -64,13 +127,16 @@ export default function TweetCard({ tweet }: { tweet: TweetEntry }) {
                   <img
                     src={url}
                     alt=""
-                    className="rounded-md border border-border w-full h-auto max-h-64 object-cover"
+                    className="rounded-md border border-border w-full h-auto max-h-96 object-contain"
                     loading="lazy"
                   />
                 </a>
               ))}
             </div>
           )}
+
+          {/* Quoted tweet */}
+          {tweet.quoted && <QuotedTweetBlock qt={tweet.quoted} />}
 
           {/* Link preview card */}
           {hasCard && (

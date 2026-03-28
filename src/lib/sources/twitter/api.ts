@@ -1,4 +1,4 @@
-import type { TweetEntry, TweetCard } from "./types";
+import type { TweetEntry, TweetCard, QuotedTweet } from "./types";
 
 // Bearer token public de l'app web Twitter (identique pour tous les utilisateurs)
 const BEARER_TOKEN =
@@ -80,6 +80,7 @@ interface TweetResult {
       name?: string;
     };
   };
+  quoted_status_result?: { result?: TweetResult };
 }
 
 function parseCard(tweetResult: TweetResult): TweetCard | undefined {
@@ -117,6 +118,48 @@ function parseCard(tweetResult: TweetResult): TweetCard | undefined {
   };
 }
 
+function parseQuotedTweet(qt: TweetResult | undefined): QuotedTweet | undefined {
+  if (!qt) return undefined;
+  const qtActual = qt.tweet || qt;
+  if (qtActual.__typename === "TweetTombstone") return undefined;
+
+  const qtLegacy = qtActual.legacy;
+  if (!qtLegacy?.full_text) return undefined;
+
+  const qtUser = qtActual.core?.user_results?.result?.legacy;
+  const qtNoteTweet = qtActual.note_tweet?.note_tweet_results?.result;
+  let qtContent = qtNoteTweet?.text || qtLegacy.full_text || "";
+  const qtUrlEntities = qtNoteTweet?.entity_set?.urls ?? qtLegacy.entities?.urls ?? [];
+
+  qtContent = qtContent.replace(/\s*https:\/\/t\.co\/\w+\s*$/g, "").trim();
+  for (const u of qtUrlEntities) {
+    if (u.url && u.expanded_url) {
+      qtContent = qtContent.replace(u.url, u.expanded_url);
+    }
+  }
+
+  const qtMediaEntities = qtLegacy.extended_entities?.media ?? qtLegacy.entities?.media ?? [];
+  const qtMedia: string[] = [];
+  for (const m of qtMediaEntities) {
+    if (m.media_url_https) qtMedia.push(m.media_url_https);
+  }
+
+  const qtHandle = qtUser?.screen_name || "unknown";
+  const qtId = qtActual.rest_id || qtLegacy.id_str || "";
+
+  return {
+    author: qtUser?.name || "Inconnu",
+    authorHandle: qtHandle,
+    avatarUrl: qtUser?.profile_image_url_https?.replace("_normal.", "_200x200.") || undefined,
+    content: qtContent,
+    published: qtLegacy.created_at
+      ? new Date(qtLegacy.created_at).toISOString()
+      : new Date().toISOString(),
+    media: qtMedia,
+    url: `https://x.com/${qtHandle}/status/${qtId}`,
+  };
+}
+
 function parseTweetResult(tweet: TweetResult): TweetEntry | null {
   // Dérouler les wrappers (TweetWithVisibilityResults, etc.)
   const actual = tweet.tweet || tweet;
@@ -128,6 +171,7 @@ function parseTweetResult(tweet: TweetResult): TweetEntry | null {
   const user = actual.core?.user_results?.result?.legacy;
   const authorName = user?.name || "Inconnu";
   const authorHandle = user?.screen_name || "unknown";
+  const avatarUrl = user?.profile_image_url_https?.replace("_normal.", "_200x200.") || undefined;
 
   // Médias
   const mediaEntities =
@@ -142,6 +186,10 @@ function parseTweetResult(tweet: TweetResult): TweetEntry | null {
   const rtActual = rt?.tweet || rt;
   const rtLegacy = rtActual?.legacy;
   const rtNoteTweet = rtActual?.note_tweet?.note_tweet_results?.result;
+
+  // Quote tweet
+  const qt = actual.quoted_status_result?.result;
+  const quoted = parseQuotedTweet(qt);
 
   // Card (link preview) — priorité au RT s'il existe
   const card = parseCard(rtActual ?? actual);
@@ -180,6 +228,7 @@ function parseTweetResult(tweet: TweetResult): TweetEntry | null {
     source: "twitter",
     author: authorName,
     authorHandle,
+    avatarUrl,
     content,
     published: legacy.created_at
       ? new Date(legacy.created_at).toISOString()
@@ -187,6 +236,7 @@ function parseTweetResult(tweet: TweetResult): TweetEntry | null {
     url: `https://x.com/${authorHandle}/status/${tweetId}`,
     media,
     card,
+    quoted,
   };
 }
 
