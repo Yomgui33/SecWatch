@@ -28,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Logo />
               </a>
               <nav className="flex items-center gap-3 border-l border-border pl-4">
+                <NavLink href="/brief">Brief</NavLink>
                 <NavLink href="/">Vulnérabilités</NavLink>
                 <NavLink href="/news">News</NavLink>
                 <NavLink href="/admin">Admin</NavLink>

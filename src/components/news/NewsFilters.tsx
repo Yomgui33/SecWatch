@@ -2,10 +2,10 @@
 
 import type { NewsSource, NewsDateFilter, NewsFilters as Filters } from "@/lib/sources/twitter/types";
 
-const SOURCE_OPTIONS: { value: NewsSource; label: string; active: boolean }[] = [
+const SOURCE_OPTIONS: { value: NewsSource; label: string; active: boolean; href?: string }[] = [
   { value: "twitter", label: "Twitter / X", active: true },
   { value: "rss", label: "RSS", active: true },
-  { value: "linkedin", label: "LinkedIn", active: false },
+  { value: "linkedin", label: "LinkedIn", active: false, href: "https://www.linkedin.com/feed/" },
 ];
 
 const DATE_OPTIONS: { value: NewsDateFilter; label: string }[] = [
@@ -32,6 +32,19 @@ export default function NewsFilters({ filters, onChange, totalResults, unreadCou
           {SOURCE_OPTIONS.map((opt) => {
             const isActive = filters.activeSource === opt.value;
             if (!opt.active) {
+              if (opt.href) {
+                return (
+                  <a
+                    key={opt.value}
+                    href={opt.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 text-xs rounded-md border border-border text-text-muted hover:bg-surface-hover hover:text-text-secondary transition-colors"
+                  >
+                    {opt.label} ↗
+                  </a>
+                );
+              }
               return (
                 <span
                   key={opt.value}

@@ -21,3 +21,18 @@ export const DEFAULT_FEEDS: RssFeed[] = [
   { name: "harmj0y", url: "https://blog.harmj0y.net/feed/", htmlUrl: "https://blog.harmj0y.net/" },
   { name: "C.S. by G.B.", url: "https://csbygb.github.io/blog/atom.xml", htmlUrl: "http://csbygb.github.io/blog" },
 ].map((f) => ({ ...f, id: feedIdFromUrl(f.url) }));
+
+/**
+ * Instructions pour intégrer des newsletters via kill-the-newsletter.com :
+ *
+ * 1. Aller sur https://kill-the-newsletter.com
+ * 2. Créer une boîte aux lettres (un nom au choix, ex: "secwatch-tldr")
+ * 3. Le service fournit :
+ *    - Une adresse email : xxxxx@kill-the-newsletter.com
+ *    - Un flux Atom : https://kill-the-newsletter.com/feeds/xxxxx.xml
+ * 4. S'abonner à la newsletter avec cette adresse email
+ * 5. Ajouter le flux Atom dans SecWatch via /admin > Flux RSS
+ *
+ * Chaque email reçu devient automatiquement une entrée dans le flux Atom,
+ * et sera affiché dans l'onglet RSS de SecWatch comme n'importe quel autre flux.
+ */
