@@ -1,5 +1,6 @@
 import XCredentialsForm from "@/components/admin/XCredentialsForm";
 import RssFeedsManager from "@/components/admin/RssFeedsManager";
+import SettingsForm from "@/components/admin/SettingsForm";
 
 export const metadata = {
   title: "Admin — SecWatch",
@@ -14,6 +15,11 @@ export default function AdminPage() {
           Configuration des sources de données.
         </p>
       </div>
+
+      <section className="space-y-4 mb-12">
+        <h3 className="text-base font-medium">Préférences</h3>
+        <SettingsForm />
+      </section>
 
       <section className="space-y-4 mb-12">
         <h3 className="text-base font-medium">Connexion Twitter / X</h3>

@@ -73,7 +73,7 @@ export default function RssFeedFilter({
 
       {/* Filtres par flux */}
       <div className="flex flex-wrap gap-1.5">
-        {stats.map((stat) => {
+        {stats.filter((stat) => !hideRead || stat.unread > 0).map((stat) => {
           const isSelected =
             selectedFeeds.size === 0 || selectedFeeds.has(stat.id);
           return (

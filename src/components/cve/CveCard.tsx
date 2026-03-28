@@ -16,7 +16,7 @@ function truncate(text: string, max: number): string {
   return text.slice(0, max).trimEnd() + "\u2026";
 }
 
-export default function CveCard({ cve }: { cve: CveEntry }) {
+export default function CveCard({ cve, onLinkClick }: { cve: CveEntry; onLinkClick?: (id: string) => void }) {
   const sev = SEVERITY_CONFIG[cve.severity];
 
   return (
@@ -43,6 +43,7 @@ export default function CveCard({ cve }: { cve: CveEntry }) {
               href={cve.nvdUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => onLinkClick?.(cve.id)}
               className="font-mono text-sm font-semibold text-accent hover:underline"
             >
               {cve.id}

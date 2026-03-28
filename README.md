@@ -1,8 +1,18 @@
 # SecWatch
 
-Dashboard de veille cybersecurite : suivi des CVE (NVD) et fil d'actualite securite via Twitter/X.
+Dashboard de veille cybersecurite : suivi des CVE critiques, flux RSS netsec, fil Twitter/X et brief quotidien.
 
 Built with Next.js, Tailwind CSS and Upstash Redis.
+
+## Fonctionnalites
+
+- **Brief quotidien** (`/brief`) — vue consolidee des dernieres 24h : CVE critiques, articles RSS non lus, tweets. Chaque element peut etre marque comme lu individuellement ou par section.
+- **Vulnerabilites** (`/`) — suivi des CVE depuis la National Vulnerability Database (NVD), filtrables par severite, periode et tri.
+- **News** (`/news`) — deux onglets :
+  - **Twitter / X** — fil "Following" (chronologique, sans suggestions). Supporte les tweets longs, retweets complets, quote tweets, link preview cards et avatars.
+  - **RSS** — agregation de flux RSS/Atom avec suivi lu/non-lu, filtre par source, masquage des lus.
+  - **LinkedIn** — lien direct vers le feed LinkedIn.
+- **Administration** (`/admin`) — preferences (marquage automatique au clic), gestion des cookies Twitter/X, gestion des flux RSS (ajout, suppression, reinitialisation des flux par defaut).
 
 ## Prerequis
 
@@ -26,7 +36,7 @@ Creer un fichier `.env.local` a la racine du projet :
 # Demander une cle sur : https://nvd.nist.gov/developers/request-an-api-key
 NVD_API_KEY=
 
-# Upstash Redis (pour stocker les comptes Twitter ajoutes)
+# Upstash Redis (pour stocker les credentials, flux RSS, etats de lecture)
 # Creer un store gratuit sur https://console.upstash.com/
 # Puis copier les valeurs REST depuis l'onglet "REST API"
 KV_REST_API_URL=
@@ -42,3 +52,21 @@ npm run dev
 ```
 
 L'application est accessible sur [http://localhost:3000](http://localhost:3000).
+
+## Flux RSS par defaut
+
+Au premier lancement, SecWatch charge automatiquement 17 flux RSS de la communaute netsec (Krebs on Security, PortSwigger Research, Synacktiv, TrustedSec, Rapid7, etc.). Ils peuvent etre geres depuis `/admin` > Flux RSS.
+
+## Integrer des newsletters
+
+Pour integrer des newsletters cybersecurite dans le module RSS :
+
+1. Verifier si la newsletter propose un flux RSS natif (Substack : `newsletter.substack.com/feed`, Ghost : `/rss/`, Beehiiv : `/feed`). Si oui, l'ajouter directement dans `/admin` > Flux RSS.
+
+2. Si la newsletter n'a pas de RSS, utiliser [kill-the-newsletter.com](https://kill-the-newsletter.com) :
+   - Creer une boite aux lettres (ex: "secwatch-tldr")
+   - Le service fournit une adresse email (`xxxxx@kill-the-newsletter.com`) et un flux Atom (`https://kill-the-newsletter.com/feeds/xxxxx.xml`)
+   - S'abonner a la newsletter avec cette adresse email
+   - Ajouter le flux Atom dans `/admin` > Flux RSS > Ajouter un flux
+
+Chaque email recu apparaitra automatiquement dans l'onglet RSS de SecWatch.

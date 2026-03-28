@@ -66,17 +66,23 @@ export default function BriefDashboard() {
   const [tweetReadIds, setTweetReadIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [autoMarkRead, setAutoMarkRead] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/brief");
-        if (!res.ok) throw new Error();
-        const json: BriefData = await res.json();
+        const [briefRes, settingsRes] = await Promise.all([
+          fetch("/api/brief"),
+          fetch("/api/admin/settings"),
+        ]);
+        if (!briefRes.ok) throw new Error();
+        const json: BriefData = await briefRes.json();
         setData(json);
         setRssReadIds(new Set(json.rssReadIds ?? []));
         setCveReadIds(new Set(json.cveReadIds ?? []));
         setTweetReadIds(new Set(json.tweetReadIds ?? []));
+        const settings = await settingsRes.json().catch(() => ({}));
+        setAutoMarkRead(settings.autoMarkReadOnClick ?? true);
       } catch {
         setError("Impossible de charger le brief.");
       } finally {
@@ -138,6 +144,17 @@ export default function BriefDashboard() {
   const handleTweetToggle = toggleRead(setTweetReadIds, "/api/brief/read", { source: "tweets" });
   const handleRssToggle = toggleRead(setRssReadIds, "/api/news/rss/read", {});
 
+  // --- Auto-mark-read on link click ---
+  const handleCveLinkClick = (id: string) => {
+    if (autoMarkRead && !cveReadIds.has(id)) handleCveToggle(id, true);
+  };
+  const handleRssLinkClick = (id: string) => {
+    if (autoMarkRead && !rssReadIds.has(id)) handleRssToggle(id, true);
+  };
+  const handleTweetLinkClick = (id: string) => {
+    if (autoMarkRead && !tweetReadIds.has(id)) handleTweetToggle(id, true);
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -194,7 +211,7 @@ export default function BriefDashboard() {
           <div className="space-y-3">
             {unreadCves.map((cve) => (
               <div key={cve.id}>
-                <CveCard cve={cve} />
+                <CveCard cve={cve} onLinkClick={handleCveLinkClick} />
                 <MarkReadButton
                   read={false}
                   onToggle={() => handleCveToggle(cve.id, true)}
@@ -226,6 +243,7 @@ export default function BriefDashboard() {
                 article={article}
                 read={false}
                 onToggleRead={handleRssToggle}
+                onLinkClick={handleRssLinkClick}
               />
             ))}
           </div>
@@ -249,7 +267,7 @@ export default function BriefDashboard() {
           <div className="space-y-3">
             {unreadTweets.map((tweet) => (
               <div key={tweet.id}>
-                <TweetCard tweet={tweet} />
+                <TweetCard tweet={tweet} onLinkClick={handleTweetLinkClick} />
                 <MarkReadButton
                   read={false}
                   onToggle={() => handleTweetToggle(tweet.id, true)}

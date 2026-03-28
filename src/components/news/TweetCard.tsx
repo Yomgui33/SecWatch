@@ -85,7 +85,7 @@ function QuotedTweetBlock({ qt }: { qt: QuotedTweet }) {
   );
 }
 
-export default function TweetCard({ tweet }: { tweet: TweetEntry }) {
+export default function TweetCard({ tweet, onLinkClick }: { tweet: TweetEntry; onLinkClick?: (id: string) => void }) {
   const hasMedia = tweet.media.length > 0;
   const hasCard = tweet.card && !hasMedia && !tweet.quoted;
 
@@ -178,6 +178,7 @@ export default function TweetCard({ tweet }: { tweet: TweetEntry }) {
             href={tweet.url}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => onLinkClick?.(tweet.id)}
             className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-accent transition-colors"
           >
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

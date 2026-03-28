@@ -43,6 +43,15 @@ export default function NewsDashboard() {
   const [hideRead, setHideRead] = useState(true);
   const rssFetched = useRef(false);
 
+  // --- Auto-mark-read setting ---
+  const [autoMarkRead, setAutoMarkRead] = useState(true);
+  useEffect(() => {
+    fetch("/api/admin/settings")
+      .then((r) => r.json())
+      .then((s) => setAutoMarkRead(s.autoMarkReadOnClick ?? true))
+      .catch(() => {});
+  }, []);
+
   // --- Fetch Twitter ---
   const fetchTweets = useCallback(async () => {
     if (twitterFetched.current) return;
@@ -142,6 +151,11 @@ export default function NewsDashboard() {
     } catch {
       // Silently fail — optimistic state remains
     }
+  };
+
+  // --- Auto-mark-read on link click ---
+  const handleRssLinkClick = (id: string) => {
+    if (autoMarkRead && !readIds.has(id)) handleToggleRead(id, true);
   };
 
   // --- RSS: toggle feed filter ---
@@ -279,6 +293,7 @@ export default function NewsDashboard() {
                       article={article}
                       read={readIds.has(article.id)}
                       onToggleRead={handleToggleRead}
+                      onLinkClick={handleRssLinkClick}
                     />
                   ))}
                 </div>

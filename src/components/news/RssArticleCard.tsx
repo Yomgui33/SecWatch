@@ -25,9 +25,10 @@ interface Props {
   article: RssArticle;
   read: boolean;
   onToggleRead: (id: string, read: boolean) => void;
+  onLinkClick?: (id: string) => void;
 }
 
-export default function RssArticleCard({ article, read, onToggleRead }: Props) {
+export default function RssArticleCard({ article, read, onToggleRead, onLinkClick }: Props) {
   return (
     <article
       className={`border border-border rounded-lg p-4 hover:bg-surface-hover transition-colors ${
@@ -75,6 +76,7 @@ export default function RssArticleCard({ article, read, onToggleRead }: Props) {
                 href={article.link}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => onLinkClick?.(article.id)}
                 className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-accent transition-colors"
               >
                 <svg
