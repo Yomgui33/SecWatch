@@ -1,3 +1,4 @@
+import EnvConfigForm from "@/components/admin/EnvConfigForm";
 import XCredentialsForm from "@/components/admin/XCredentialsForm";
 import RssFeedsManager from "@/components/admin/RssFeedsManager";
 import SettingsForm from "@/components/admin/SettingsForm";
@@ -17,8 +18,11 @@ export default function AdminPage() {
       </div>
 
       <section className="space-y-4 mb-12">
-        <h3 className="text-base font-medium">Préférences</h3>
-        <SettingsForm />
+        <h3 className="text-base font-medium">Connexion aux services</h3>
+        <p className="text-sm text-text-secondary leading-relaxed">
+          Configuration de la base de données Redis (Upstash) et de la clé API NVD.
+        </p>
+        <EnvConfigForm />
       </section>
 
       <section className="space-y-4 mb-12">
@@ -29,6 +33,11 @@ export default function AdminPage() {
           permet de les renouveler.
         </p>
         <XCredentialsForm />
+      </section>
+
+      <section className="space-y-4 mb-12">
+        <h3 className="text-base font-medium">Préférences</h3>
+        <SettingsForm />
       </section>
 
       <section className="space-y-4">

@@ -70,3 +70,11 @@ Pour integrer des newsletters cybersecurite dans le module RSS :
    - Ajouter le flux Atom dans `/admin` > Flux RSS > Ajouter un flux
 
 Chaque email recu apparaitra automatiquement dans l'onglet RSS de SecWatch.
+
+## Todo
+
+1. Ajouter les infos de connexion à Redis dans la page /admin pour éviter d'avoir à le faire manuellement dans le fichier .env.local à chaque nouveau déploiement. Si le fichier .env.local n'existe pas encore lors d'un nouveau déploiement, le créer au moment de la saisie des infos de connexion redis ou X.
+
+2. Ajouter des options de configuration dans la page /admin pour le contenu du brief : quelles sources doivent être affichées ou non (X/RSS/Vulns) et le niveau de gravité des vulns.
+
+3. Protéger l'accès au site par un mot de passe avec l'option "rester connecté" afin de le saisir une seule fois sur une machine donnée. Ce mot de passe doit être défini et modifiable dans la section /admin avec un mot de passe par défaut lors du premier lancement "SecWatch4you". 

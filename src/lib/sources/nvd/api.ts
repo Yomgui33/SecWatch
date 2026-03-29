@@ -4,6 +4,7 @@ import {
   CveSeverity,
   NvdCve,
 } from "./types";
+import { getRuntimeConfig } from "@/lib/config";
 
 const NVD_API_BASE = "https://services.nvd.nist.gov/rest/json/cves/2.0";
 
@@ -64,7 +65,7 @@ export async function fetchCves(options: {
   if (options.startIndex) params.set("startIndex", String(options.startIndex));
 
   const headers: Record<string, string> = {};
-  const apiKey = process.env.NVD_API_KEY;
+  const apiKey = getRuntimeConfig().NVD_API_KEY;
   if (apiKey) {
     headers["apiKey"] = apiKey;
   }
