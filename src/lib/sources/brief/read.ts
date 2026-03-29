@@ -11,7 +11,9 @@ export async function getBriefReadIds(source: BriefSource): Promise<string[]> {
   const redis = getRedis();
   if (!redis) return [];
   try {
-    return (await redis.smembers(KEYS[source])) ?? [];
+    const data = await redis.smembers(KEYS[source]);
+    // Upstash peut retourner des numbers pour les IDs numériques (tweet IDs)
+    return (data ?? []).map(String);
   } catch {
     return [];
   }

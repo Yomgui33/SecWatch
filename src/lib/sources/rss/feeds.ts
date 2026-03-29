@@ -42,7 +42,7 @@ export async function getReadIds(): Promise<string[]> {
   if (!redis) return [];
   try {
     const data = await redis.smembers(KV_READ_KEY);
-    return data ?? [];
+    return (data ?? []).map(String);
   } catch {
     return [];
   }
