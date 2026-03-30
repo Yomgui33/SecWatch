@@ -2,12 +2,22 @@ import { getRedis } from "@/lib/kv";
 
 const KV_KEY = "secwatch:settings";
 
+export type BriefSeverity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+
 export interface AppSettings {
   autoMarkReadOnClick: boolean;
+  briefShowCves: boolean;
+  briefShowRss: boolean;
+  briefShowTweets: boolean;
+  briefMinSeverity: BriefSeverity;
 }
 
 const DEFAULTS: AppSettings = {
   autoMarkReadOnClick: true,
+  briefShowCves: true,
+  briefShowRss: true,
+  briefShowTweets: true,
+  briefMinSeverity: "CRITICAL",
 };
 
 export async function getSettings(): Promise<AppSettings> {

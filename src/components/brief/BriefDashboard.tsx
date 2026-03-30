@@ -8,6 +8,13 @@ import CveCard from "@/components/cve/CveCard";
 import RssArticleCard from "@/components/news/RssArticleCard";
 import TweetCard from "@/components/news/TweetCard";
 
+interface BriefSettings {
+  briefShowCves: boolean;
+  briefShowRss: boolean;
+  briefShowTweets: boolean;
+  briefMinSeverity: string;
+}
+
 interface BriefData {
   cves: CveEntry[];
   rssArticles: RssArticle[];
@@ -16,25 +23,42 @@ interface BriefData {
   twitterError: string | null;
   cveReadIds: string[];
   tweetReadIds: string[];
+  settings?: BriefSettings;
 }
 
 function SectionHeader({
   title,
   count,
   icon,
+  collapsed,
+  onToggleCollapse,
   onMarkAllRead,
 }: {
   title: string;
   count: number;
   icon: string;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
   onMarkAllRead: () => void;
 }) {
   return (
     <div className="flex items-center gap-2 mb-3">
-      <span className="text-base">{icon}</span>
-      <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider">
-        {title}
-      </h3>
+      <button
+        onClick={onToggleCollapse}
+        className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+      >
+        <span
+          className={`text-xs text-text-muted transition-transform ${
+            collapsed ? "" : "rotate-90"
+          }`}
+        >
+          ▶
+        </span>
+        <span className="text-base">{icon}</span>
+        <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider">
+          {title}
+        </h3>
+      </button>
       <span className="px-2 py-0.5 text-xs rounded-full bg-surface-alt text-text-muted font-medium">
         {count}
       </span>
@@ -67,6 +91,15 @@ export default function BriefDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [autoMarkRead, setAutoMarkRead] = useState(true);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const toggleCollapse = (key: string) =>
+    setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
+  const [briefSettings, setBriefSettings] = useState<BriefSettings>({
+    briefShowCves: true,
+    briefShowRss: true,
+    briefShowTweets: true,
+    briefMinSeverity: "CRITICAL",
+  });
 
   useEffect(() => {
     (async () => {
@@ -81,6 +114,7 @@ export default function BriefDashboard() {
         setRssReadIds(new Set(json.rssReadIds ?? []));
         setCveReadIds(new Set(json.cveReadIds ?? []));
         setTweetReadIds(new Set(json.tweetReadIds ?? []));
+        if (json.settings) setBriefSettings(json.settings);
         const settings = await settingsRes.json().catch(() => ({}));
         setAutoMarkRead(settings.autoMarkReadOnClick ?? true);
       } catch {
@@ -181,9 +215,9 @@ export default function BriefDashboard() {
     );
   }
 
-  const unreadCves = data.cves.filter((c) => !cveReadIds.has(c.id));
-  const unreadArticles = data.rssArticles.filter((a) => !rssReadIds.has(a.id));
-  const unreadTweets = data.tweets.filter((t) => !tweetReadIds.has(t.id));
+  const unreadCves = briefSettings.briefShowCves ? data.cves.filter((c) => !cveReadIds.has(c.id)) : [];
+  const unreadArticles = briefSettings.briefShowRss ? data.rssArticles.filter((a) => !rssReadIds.has(a.id)) : [];
+  const unreadTweets = briefSettings.briefShowTweets ? data.tweets.filter((t) => !tweetReadIds.has(t.id)) : [];
   const isEmpty = unreadCves.length === 0 && unreadArticles.length === 0 && unreadTweets.length === 0;
 
   return (
@@ -201,6 +235,8 @@ export default function BriefDashboard() {
             title="Vulnérabilités critiques"
             count={unreadCves.length}
             icon="🔴"
+            collapsed={!!collapsed.cves}
+            onToggleCollapse={() => toggleCollapse("cves")}
             onMarkAllRead={markAllRead(
               unreadCves.map((c) => c.id),
               setCveReadIds,
@@ -208,17 +244,19 @@ export default function BriefDashboard() {
               { source: "cves" }
             )}
           />
-          <div className="space-y-3">
-            {unreadCves.map((cve) => (
-              <div key={cve.id}>
-                <CveCard cve={cve} onLinkClick={handleCveLinkClick} />
-                <MarkReadButton
-                  read={false}
-                  onToggle={() => handleCveToggle(cve.id, true)}
-                />
-              </div>
-            ))}
-          </div>
+          {!collapsed.cves && (
+            <div className="space-y-3">
+              {unreadCves.map((cve) => (
+                <div key={cve.id}>
+                  <CveCard cve={cve} onLinkClick={handleCveLinkClick} />
+                  <MarkReadButton
+                    read={false}
+                    onToggle={() => handleCveToggle(cve.id, true)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
@@ -229,6 +267,8 @@ export default function BriefDashboard() {
             title="Articles RSS"
             count={unreadArticles.length}
             icon="📰"
+            collapsed={!!collapsed.rss}
+            onToggleCollapse={() => toggleCollapse("rss")}
             onMarkAllRead={markAllRead(
               unreadArticles.map((a) => a.id),
               setRssReadIds,
@@ -236,17 +276,19 @@ export default function BriefDashboard() {
               {}
             )}
           />
-          <div className="space-y-3">
-            {unreadArticles.map((article) => (
-              <RssArticleCard
-                key={article.id}
-                article={article}
-                read={false}
-                onToggleRead={handleRssToggle}
-                onLinkClick={handleRssLinkClick}
-              />
-            ))}
-          </div>
+          {!collapsed.rss && (
+            <div className="space-y-3">
+              {unreadArticles.map((article) => (
+                <RssArticleCard
+                  key={article.id}
+                  article={article}
+                  read={false}
+                  onToggleRead={handleRssToggle}
+                  onLinkClick={handleRssLinkClick}
+                />
+              ))}
+            </div>
+          )}
         </section>
       )}
 
@@ -257,6 +299,8 @@ export default function BriefDashboard() {
             title="Twitter / X"
             count={unreadTweets.length}
             icon="🐦"
+            collapsed={!!collapsed.tweets}
+            onToggleCollapse={() => toggleCollapse("tweets")}
             onMarkAllRead={markAllRead(
               unreadTweets.map((t) => t.id),
               setTweetReadIds,
@@ -264,21 +308,23 @@ export default function BriefDashboard() {
               { source: "tweets" }
             )}
           />
-          <div className="space-y-3">
-            {unreadTweets.map((tweet) => (
-              <div key={tweet.id}>
-                <TweetCard tweet={tweet} onLinkClick={handleTweetLinkClick} />
-                <MarkReadButton
-                  read={false}
-                  onToggle={() => handleTweetToggle(tweet.id, true)}
-                />
-              </div>
-            ))}
-          </div>
+          {!collapsed.tweets && (
+            <div className="space-y-3">
+              {unreadTweets.map((tweet) => (
+                <div key={tweet.id}>
+                  <TweetCard tweet={tweet} onLinkClick={handleTweetLinkClick} />
+                  <MarkReadButton
+                    read={false}
+                    onToggle={() => handleTweetToggle(tweet.id, true)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
-      {data.twitterError === "credentials_missing" && (
+      {briefSettings.briefShowTweets && data.twitterError === "credentials_missing" && (
         <div className="border border-border rounded-lg p-4 text-center">
           <p className="text-sm text-text-muted">
             Twitter/X non configuré.{" "}
