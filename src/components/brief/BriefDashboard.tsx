@@ -42,29 +42,29 @@ function SectionHeader({
   onMarkAllRead: () => void;
 }) {
   return (
-    <div className="flex items-center gap-2 mb-3">
+    <div className="flex items-center gap-2.5 mb-4">
       <button
         onClick={onToggleCollapse}
-        className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+        className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity"
       >
         <span
-          className={`text-xs text-text-muted transition-transform ${
+          className={`text-[10px] text-text-muted transition-transform ${
             collapsed ? "" : "rotate-90"
           }`}
         >
           ▶
         </span>
         <span className="text-base">{icon}</span>
-        <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider">
+        <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider">
           {title}
         </h3>
       </button>
-      <span className="px-2 py-0.5 text-xs rounded-full bg-surface-alt text-text-muted font-medium">
+      <span className="px-2 py-0.5 text-[11px] rounded-full bg-surface-alt text-text-muted font-medium">
         {count}
       </span>
       <button
         onClick={onMarkAllRead}
-        className="ml-auto px-3 py-1 text-xs rounded-md border border-border text-text-muted hover:bg-surface-hover hover:text-text-secondary transition-colors cursor-pointer"
+        className="ml-auto pill !py-1 !px-3 !text-[11px]"
       >
         Tout marquer lu
       </button>
@@ -205,13 +205,13 @@ export default function BriefDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="border border-border rounded-lg p-4 animate-pulse">
+      <div className="space-y-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="card p-4 animate-pulse">
             <div className="flex gap-3">
               <div className="w-10 h-10 bg-surface-alt rounded-full" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 w-40 bg-surface-alt rounded" />
+              <div className="flex-1 space-y-2.5">
+                <div className="h-3.5 w-36 bg-surface-alt rounded" />
                 <div className="h-3 w-full bg-surface-alt rounded" />
               </div>
             </div>
@@ -339,7 +339,7 @@ export default function BriefDashboard() {
       )}
 
       {briefSettings.briefShowTweets && data.twitterError === "credentials_missing" && (
-        <div className="border border-border rounded-lg p-4 text-center">
+        <div className="card p-4 text-center">
           <p className="text-sm text-text-muted">
             Twitter/X non configuré.{" "}
             <a href="/admin" className="text-accent hover:underline">

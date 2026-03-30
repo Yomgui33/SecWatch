@@ -15,12 +15,12 @@ export default function HomePage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold tracking-tight mb-1">
+      <div className="mb-8">
+        <h2 className="font-display text-2xl tracking-tight mb-1">
           Brief du jour
         </h2>
-        <p className="text-sm text-text-secondary">
-          {today} — Vulnérabilités critiques, articles et tweets des dernières 24h.
+        <p className="text-sm text-text-muted">
+          {today}
         </p>
       </div>
       <BriefDashboard />

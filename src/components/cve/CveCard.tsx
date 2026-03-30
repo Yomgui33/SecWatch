@@ -20,11 +20,11 @@ export default function CveCard({ cve, onLinkClick }: { cve: CveEntry; onLinkCli
   const sev = SEVERITY_CONFIG[cve.severity];
 
   return (
-    <article className="group border border-border rounded-lg p-4 hover:bg-surface-hover transition-colors">
+    <article className="card p-4">
       <div className="flex flex-col sm:flex-row sm:items-start gap-3">
         {/* Score badge */}
         <div
-          className={`shrink-0 flex items-center justify-center w-14 h-14 rounded-md ${sev.bgClass} ${sev.textClass} font-semibold text-sm`}
+          className={`shrink-0 flex items-center justify-center w-14 h-14 rounded-lg ${sev.bgClass} ${sev.textClass} font-semibold text-sm`}
         >
           {cve.score !== null ? (
             <div className="text-center leading-tight">

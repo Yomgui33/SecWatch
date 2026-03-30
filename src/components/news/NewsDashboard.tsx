@@ -193,9 +193,14 @@ export default function NewsDashboard() {
     return true;
   });
 
-  const filteredRss = rssArticles.filter((a) => {
-    if (selectedFeeds.size > 0 && !selectedFeeds.has(a.feedId)) return false;
+  // Articles filtrés par date uniquement (pour les stats par source)
+  const dateFilteredRss = rssArticles.filter((a) => {
     if (filters.dateFilter === "24h" && now - new Date(a.published).getTime() >= h24) return false;
+    return true;
+  });
+
+  const filteredRss = dateFilteredRss.filter((a) => {
+    if (selectedFeeds.size > 0 && !selectedFeeds.has(a.feedId)) return false;
     if (hideRead && readIds.has(a.id)) return false;
     return true;
   });
@@ -206,7 +211,7 @@ export default function NewsDashboard() {
   const skeleton = (
     <div className="space-y-3">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="border border-border rounded-lg p-4 animate-pulse">
+        <div key={i} className="card p-4 animate-pulse">
           <div className="flex gap-3">
             <div className="w-10 h-10 bg-surface-alt rounded-full" />
             <div className="flex-1 space-y-2">
@@ -233,7 +238,7 @@ export default function NewsDashboard() {
       {filters.activeSource === "twitter" && (
         <>
           {credentialsError ? (
-            <div className="border border-border rounded-lg p-6 text-center space-y-3">
+            <div className="card p-6 text-center space-y-3">
               <p className="text-sm text-text-secondary">{credentialsError}</p>
               <Link
                 href="/admin"
@@ -249,7 +254,7 @@ export default function NewsDashboard() {
               <p className="text-sm text-severity-high mb-3">{twitterError}</p>
               <button
                 onClick={() => { twitterFetched.current = false; fetchTweets(); }}
-                className="px-4 py-2 text-sm border border-border rounded-md hover:bg-surface-hover transition-colors cursor-pointer"
+                className="pill"
               >
                 Réessayer
               </button>
@@ -278,7 +283,7 @@ export default function NewsDashboard() {
               <p className="text-sm text-severity-high mb-3">{rssError}</p>
               <button
                 onClick={() => { rssFetched.current = false; fetchRss(); }}
-                className="px-4 py-2 text-sm border border-border rounded-md hover:bg-surface-hover transition-colors cursor-pointer"
+                className="pill"
               >
                 Réessayer
               </button>
@@ -286,7 +291,7 @@ export default function NewsDashboard() {
           ) : (
             <>
               <RssFeedFilter
-                articles={rssArticles}
+                articles={dateFilteredRss}
                 readIds={readIds}
                 selectedFeeds={selectedFeeds}
                 onToggleFeed={handleToggleFeed}

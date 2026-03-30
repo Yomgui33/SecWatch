@@ -98,7 +98,7 @@ export default function EnvConfigForm() {
       {/* Redis status */}
       {status && (
         <div
-          className={`flex items-center gap-3 p-3 rounded-lg border ${
+          className={`flex items-center gap-3 p-3 card ${
             status.redisConfigured
               ? "border-green-800/30 bg-green-900/10"
               : "border-severity-high/30 bg-severity-high-bg"
@@ -127,7 +127,7 @@ export default function EnvConfigForm() {
       {/* NVD status */}
       {status && (
         <div
-          className={`flex items-center gap-3 p-3 rounded-lg border ${
+          className={`flex items-center gap-3 p-3 card ${
             status.nvdConfigured
               ? "border-green-800/30 bg-green-900/10"
               : "border-border bg-surface-alt"
@@ -156,7 +156,7 @@ export default function EnvConfigForm() {
         {!showRedisForm && (
           <button
             onClick={() => { setShowRedisForm(true); setMessage(null); }}
-            className="px-4 py-2 text-sm rounded-md border border-border text-text-secondary hover:bg-surface-hover transition-colors cursor-pointer"
+            className="px-4 py-2 text-sm pill"
           >
             {status?.redisConfigured ? "Modifier la connexion Redis" : "Configurer Redis"}
           </button>
@@ -164,7 +164,7 @@ export default function EnvConfigForm() {
         {!showNvdForm && (
           <button
             onClick={() => { setShowNvdForm(true); setMessage(null); }}
-            className="px-4 py-2 text-sm rounded-md border border-border text-text-secondary hover:bg-surface-hover transition-colors cursor-pointer"
+            className="px-4 py-2 text-sm pill"
           >
             {status?.nvdConfigured ? "Modifier la clé NVD" : "Ajouter une clé NVD"}
           </button>
@@ -212,7 +212,7 @@ export default function EnvConfigForm() {
                 onChange={(e) => setKvUrl(e.target.value)}
                 placeholder="https://xxxx.upstash.io"
                 required
-                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-surface text-text-primary placeholder:text-text-muted font-mono"
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent text-text-primary placeholder:text-text-muted font-mono"
               />
             </div>
             <div>
@@ -225,21 +225,21 @@ export default function EnvConfigForm() {
                 onChange={(e) => setKvToken(e.target.value)}
                 placeholder="AXxxxxxxxxxxxxxxxxxxxx"
                 required
-                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-surface text-text-primary placeholder:text-text-muted font-mono"
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent text-text-primary placeholder:text-text-muted font-mono"
               />
             </div>
             <div className="flex gap-2">
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-4 py-2 text-sm rounded-md bg-accent text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+                className="px-4 py-2 text-sm rounded-full bg-accent text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
               >
                 {submitting ? "Test de connexion..." : "Tester et enregistrer"}
               </button>
               <button
                 type="button"
                 onClick={() => { setShowRedisForm(false); setMessage(null); }}
-                className="px-4 py-2 text-sm rounded-md border border-border text-text-secondary hover:bg-surface-hover transition-colors cursor-pointer"
+                className="px-4 py-2 text-sm pill"
               >
                 Annuler
               </button>
@@ -278,21 +278,21 @@ export default function EnvConfigForm() {
                 onChange={(e) => setNvdApiKey(e.target.value)}
                 placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                 required
-                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-surface text-text-primary placeholder:text-text-muted font-mono"
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent text-text-primary placeholder:text-text-muted font-mono"
               />
             </div>
             <div className="flex gap-2">
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-4 py-2 text-sm rounded-md bg-accent text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+                className="px-4 py-2 text-sm rounded-full bg-accent text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
               >
                 {submitting ? "Enregistrement..." : "Enregistrer"}
               </button>
               <button
                 type="button"
                 onClick={() => { setShowNvdForm(false); setMessage(null); }}
-                className="px-4 py-2 text-sm rounded-md border border-border text-text-secondary hover:bg-surface-hover transition-colors cursor-pointer"
+                className="px-4 py-2 text-sm pill"
               >
                 Annuler
               </button>

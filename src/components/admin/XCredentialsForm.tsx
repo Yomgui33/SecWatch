@@ -79,7 +79,7 @@ export default function XCredentialsForm() {
       {/* Statut actuel */}
       {status && (
         <div
-          className={`flex items-center gap-3 p-3 rounded-lg border ${
+          className={`flex items-center gap-3 p-3 card ${
             status.configured && status.valid
               ? "border-green-800/30 bg-green-900/10"
               : status.configured && !status.valid
@@ -125,7 +125,7 @@ export default function XCredentialsForm() {
       {!showForm && (
         <button
           onClick={() => setShowForm(true)}
-          className="px-4 py-2 text-sm rounded-md border border-border text-text-secondary hover:bg-surface-hover transition-colors cursor-pointer"
+          className="px-4 py-2 text-sm pill"
         >
           {status?.configured ? "Renouveler les cookies" : "Configurer la connexion X"}
         </button>
@@ -184,7 +184,7 @@ export default function XCredentialsForm() {
                 onChange={(e) => setAuthToken(e.target.value)}
                 placeholder="Collez la valeur du cookie auth_token"
                 required
-                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-surface text-text-primary placeholder:text-text-muted font-mono"
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent text-text-primary placeholder:text-text-muted font-mono"
               />
             </div>
             <div>
@@ -197,14 +197,14 @@ export default function XCredentialsForm() {
                 onChange={(e) => setCt0(e.target.value)}
                 placeholder="Collez la valeur du cookie ct0"
                 required
-                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-surface text-text-primary placeholder:text-text-muted font-mono"
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent text-text-primary placeholder:text-text-muted font-mono"
               />
             </div>
             <div className="flex gap-2">
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-4 py-2 text-sm rounded-md bg-accent text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+                className="px-4 py-2 text-sm rounded-full bg-accent text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
               >
                 {submitting ? "Vérification..." : "Enregistrer"}
               </button>
@@ -214,7 +214,7 @@ export default function XCredentialsForm() {
                   setShowForm(false);
                   setMessage(null);
                 }}
-                className="px-4 py-2 text-sm rounded-md border border-border text-text-secondary hover:bg-surface-hover transition-colors cursor-pointer"
+                className="px-4 py-2 text-sm pill"
               >
                 Annuler
               </button>

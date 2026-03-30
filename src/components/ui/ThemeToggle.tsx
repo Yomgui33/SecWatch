@@ -22,13 +22,13 @@ export default function ThemeToggle() {
     localStorage.setItem("theme", next ? "dark" : "light");
   }
 
-  if (!mounted) return <div className="w-9 h-9" />;
+  if (!mounted) return <div className="w-8 h-8" />;
 
   return (
     <button
       onClick={toggle}
       aria-label={dark ? "Passer en mode clair" : "Passer en mode sombre"}
-      className="w-9 h-9 flex items-center justify-center rounded-md border border-border text-text-secondary hover:bg-surface-hover transition-colors cursor-pointer"
+      className="w-8 h-8 flex items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer"
     >
       {dark ? (
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

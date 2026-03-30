@@ -22,13 +22,13 @@ interface Props {
 
 export default function NewsFilters({ filters, onChange, totalResults, unreadCount }: Props) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Sources */}
       <div>
-        <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
+        <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2.5">
           Sources
         </h3>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {SOURCE_OPTIONS.map((opt) => {
             const isActive = filters.activeSource === opt.value;
             if (!opt.active) {
@@ -39,7 +39,7 @@ export default function NewsFilters({ filters, onChange, totalResults, unreadCou
                     href={opt.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3 py-1.5 text-xs rounded-md border border-border text-text-muted hover:bg-surface-hover hover:text-text-secondary transition-colors"
+                    className="pill !text-text-muted"
                   >
                     {opt.label} ↗
                   </a>
@@ -48,7 +48,7 @@ export default function NewsFilters({ filters, onChange, totalResults, unreadCou
               return (
                 <span
                   key={opt.value}
-                  className="px-3 py-1.5 text-xs rounded-md border border-border text-text-muted opacity-50 cursor-default"
+                  className="pill opacity-40 !cursor-default"
                   title="Bientot disponible"
                 >
                   {opt.label}
@@ -59,11 +59,7 @@ export default function NewsFilters({ filters, onChange, totalResults, unreadCou
               <button
                 key={opt.value}
                 onClick={() => onChange({ ...filters, activeSource: opt.value })}
-                className={`px-3 py-1.5 text-xs rounded-md border transition-colors cursor-pointer ${
-                  isActive
-                    ? "border-accent bg-accent-light text-accent font-medium"
-                    : "border-border text-text-secondary hover:bg-surface-hover"
-                }`}
+                className={`pill ${isActive ? "pill-active" : ""}`}
               >
                 {opt.label}
               </button>
@@ -74,19 +70,15 @@ export default function NewsFilters({ filters, onChange, totalResults, unreadCou
 
       {/* Période */}
       <div>
-        <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
+        <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2.5">
           Période
         </h3>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {DATE_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => onChange({ ...filters, dateFilter: opt.value })}
-              className={`px-3 py-1.5 text-xs rounded-md border transition-colors cursor-pointer ${
-                filters.dateFilter === opt.value
-                  ? "border-accent bg-accent-light text-accent font-medium"
-                  : "border-border text-text-secondary hover:bg-surface-hover"
-              }`}
+              className={`pill ${filters.dateFilter === opt.value ? "pill-active" : ""}`}
             >
               {opt.label}
             </button>
@@ -99,7 +91,7 @@ export default function NewsFilters({ filters, onChange, totalResults, unreadCou
         {totalResults} {filters.activeSource === "rss" ? "article" : "publication"}
         {totalResults !== 1 ? "s" : ""}
         {unreadCount !== undefined && filters.activeSource === "rss" && (
-          <span> &middot; {unreadCount} non lu{unreadCount !== 1 ? "s" : ""}</span>
+          <span> · {unreadCount} non lu{unreadCount !== 1 ? "s" : ""}</span>
         )}
       </div>
     </div>

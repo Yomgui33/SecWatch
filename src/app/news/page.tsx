@@ -8,9 +8,9 @@ export const metadata = {
 export default function NewsPage() {
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold tracking-tight mb-1">News</h2>
-        <p className="text-sm text-text-secondary">
+      <div className="mb-8">
+        <h2 className="font-display text-2xl tracking-tight mb-1">News</h2>
+        <p className="text-sm text-text-muted">
           Publications de la communauté infosec.
         </p>
       </div>

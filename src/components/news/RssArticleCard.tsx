@@ -31,13 +31,11 @@ interface Props {
 export default function RssArticleCard({ article, read, onToggleRead, onLinkClick }: Props) {
   return (
     <article
-      className={`border border-border rounded-lg p-4 hover:bg-surface-hover transition-colors ${
-        read ? "opacity-60" : ""
-      }`}
+      className={`card p-4 ${read ? "opacity-50" : ""}`}
     >
       <div className="flex items-start gap-3">
         {/* Feed icon */}
-        <div className="shrink-0 w-10 h-10 rounded-full bg-accent-light flex items-center justify-center text-accent text-sm font-semibold">
+        <div className="shrink-0 w-9 h-9 rounded-full bg-accent-light flex items-center justify-center text-accent text-xs font-semibold">
           {article.feedName.charAt(0).toUpperCase()}
         </div>
 

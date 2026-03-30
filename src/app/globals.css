@@ -1,54 +1,55 @@
 @import "tailwindcss";
 
 @theme {
-  /* Palette sobre et élégante */
-  --color-surface: #ffffff;
-  --color-surface-alt: #f8f8f8;
-  --color-surface-hover: #f0f0f0;
-  --color-border: #e2e2e2;
-  --color-text-primary: #1a1a1a;
-  --color-text-secondary: #6b6b6b;
-  --color-text-muted: #999999;
-  --color-accent: #2c5282;
-  --color-accent-light: #ebf0f7;
+  /* Warm stone palette — light */
+  --color-surface: #fafaf8;
+  --color-surface-alt: #f3f2ef;
+  --color-surface-hover: #eceae6;
+  --color-border: #ddd9d3;
+  --color-text-primary: #1c1917;
+  --color-text-secondary: #57534e;
+  --color-text-muted: #a8a29e;
+  --color-accent: #92400e;
+  --color-accent-light: #fef3c7;
 
-  /* Sévérité CVSS — tons sourds, pas néon */
-  --color-severity-critical: #9b2c2c;
-  --color-severity-critical-bg: #fdf2f2;
-  --color-severity-high: #c05621;
-  --color-severity-high-bg: #fefcf3;
-  --color-severity-medium: #975a16;
-  --color-severity-medium-bg: #fefdf5;
-  --color-severity-low: #2b6cb0;
-  --color-severity-low-bg: #f0f5fb;
-  --color-severity-none: #718096;
-  --color-severity-none-bg: #f7f7f8;
+  /* Sévérité CVSS — tons sourds */
+  --color-severity-critical: #991b1b;
+  --color-severity-critical-bg: #fef2f2;
+  --color-severity-high: #9a3412;
+  --color-severity-high-bg: #fff7ed;
+  --color-severity-medium: #854d0e;
+  --color-severity-medium-bg: #fefce8;
+  --color-severity-low: #1e40af;
+  --color-severity-low-bg: #eff6ff;
+  --color-severity-none: #6b7280;
+  --color-severity-none-bg: #f3f2ef;
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-instrument-serif), Georgia, "Times New Roman", serif;
 }
 
-/* Variables dark mode */
+/* Dark mode — warm charcoal */
 .dark {
-  --color-surface: #161618;
-  --color-surface-alt: #1e1e21;
-  --color-surface-hover: #27272b;
-  --color-border: #2e2e33;
-  --color-text-primary: #e8e8e8;
-  --color-text-secondary: #a0a0a0;
-  --color-text-muted: #6b6b6b;
-  --color-accent: #6b9bd2;
-  --color-accent-light: #1c2a3d;
+  --color-surface: #141312;
+  --color-surface-alt: #1c1a18;
+  --color-surface-hover: #252320;
+  --color-border: #302d28;
+  --color-text-primary: #e7e5e4;
+  --color-text-secondary: #a8a29e;
+  --color-text-muted: #6b6560;
+  --color-accent: #d97706;
+  --color-accent-light: #292115;
 
-  --color-severity-critical: #e57373;
-  --color-severity-critical-bg: #2a1a1a;
-  --color-severity-high: #e0915a;
-  --color-severity-high-bg: #2a2015;
-  --color-severity-medium: #d4a84b;
-  --color-severity-medium-bg: #2a2515;
-  --color-severity-low: #6b9bd2;
-  --color-severity-low-bg: #1a2230;
-  --color-severity-none: #8a8a9a;
-  --color-severity-none-bg: #1e1e23;
+  --color-severity-critical: #f87171;
+  --color-severity-critical-bg: #2a1515;
+  --color-severity-high: #fb923c;
+  --color-severity-high-bg: #2a1f14;
+  --color-severity-medium: #facc15;
+  --color-severity-medium-bg: #272314;
+  --color-severity-low: #60a5fa;
+  --color-severity-low-bg: #141c2e;
+  --color-severity-none: #9ca3af;
+  --color-severity-none-bg: #1c1a18;
 }
 
 html {
@@ -63,9 +64,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Display font utility */
+.font-display {
+  font-family: var(--font-display);
+}
+
 /* Scrollbar discrète */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -73,4 +79,53 @@ body {
 ::-webkit-scrollbar-thumb {
   background: var(--color-border);
   border-radius: 3px;
+}
+
+/* Card elevation system */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  border-color: color-mix(in srgb, var(--color-border) 80%, var(--color-accent) 20%);
+}
+.dark .card {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+.dark .card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Filter pill shared style */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  font-size: 12px;
+  line-height: 1;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  background: transparent;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+.pill:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+.pill-active {
+  border-color: var(--color-accent);
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+/* Selection color */
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 25%, transparent);
 }

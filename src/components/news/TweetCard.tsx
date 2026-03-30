@@ -75,7 +75,7 @@ function QuotedTweetBlock({ qt }: { qt: QuotedTweet }) {
               key={i}
               src={url}
               alt=""
-              className="rounded-md border border-border w-full h-auto max-h-96 object-contain"
+              className="rounded-lg border border-border w-full h-auto max-h-96 object-contain"
               loading="lazy"
             />
           ))}
@@ -90,7 +90,7 @@ export default function TweetCard({ tweet, onLinkClick }: { tweet: TweetEntry; o
   const hasCard = tweet.card && !hasMedia && !tweet.quoted;
 
   return (
-    <article className="border border-border rounded-lg p-4 hover:bg-surface-hover transition-colors">
+    <article className="card p-4">
       <div className="flex items-start gap-3">
         <Avatar src={tweet.avatarUrl} name={tweet.author} />
 
@@ -127,7 +127,7 @@ export default function TweetCard({ tweet, onLinkClick }: { tweet: TweetEntry; o
                   <img
                     src={url}
                     alt=""
-                    className="rounded-md border border-border w-full h-auto max-h-96 object-contain"
+                    className="rounded-lg border border-border w-full h-auto max-h-96 object-contain"
                     loading="lazy"
                   />
                 </a>

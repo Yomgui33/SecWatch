@@ -99,18 +99,18 @@ export default function RssFeedsManager() {
           ))}
         </div>
       ) : feeds.length === 0 ? (
-        <div className="border border-border rounded-lg p-4 text-center space-y-3">
+        <div className="card p-4 text-center space-y-3">
           <p className="text-sm text-text-muted">Aucun flux RSS configuré.</p>
           <button
             onClick={handleSeed}
             disabled={submitting}
-            className="px-4 py-2 text-sm rounded-md bg-accent text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+            className="px-4 py-2 text-sm rounded-full bg-accent text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
           >
             Charger les flux par défaut
           </button>
         </div>
       ) : (
-        <div className="border border-border rounded-lg divide-y divide-border">
+        <div className="card divide-y divide-border">
           {feeds.map((feed) => (
             <div
               key={feed.id}
@@ -145,7 +145,7 @@ export default function RssFeedsManager() {
       )}
 
       {/* Formulaire d'ajout */}
-      <div className="border border-border rounded-lg p-4 space-y-3">
+      <div className="card p-4 space-y-3">
         <p className="text-sm font-medium text-text-primary">
           Ajouter un flux RSS
         </p>
@@ -160,7 +160,7 @@ export default function RssFeedsManager() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Krebs on Security"
               required
-              className="w-full px-3 py-2 text-sm border border-border rounded-md bg-surface text-text-primary placeholder:text-text-muted"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent text-text-primary placeholder:text-text-muted"
             />
           </div>
           <div>
@@ -173,13 +173,13 @@ export default function RssFeedsManager() {
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://example.com/feed.xml"
               required
-              className="w-full px-3 py-2 text-sm border border-border rounded-md bg-surface text-text-primary placeholder:text-text-muted font-mono"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent text-text-primary placeholder:text-text-muted font-mono"
             />
           </div>
           <button
             type="submit"
             disabled={submitting}
-            className="px-4 py-2 text-sm rounded-md bg-accent text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+            className="px-4 py-2 text-sm rounded-full bg-accent text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
           >
             {submitting ? "Ajout..." : "Ajouter"}
           </button>

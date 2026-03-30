@@ -7,21 +7,21 @@ export const metadata = {
 export default function VulnerabilitiesPage() {
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold tracking-tight mb-1">
-          Dernières vulnérabilités
+      <div className="mb-8">
+        <h2 className="font-display text-2xl tracking-tight mb-1">
+          Vulnérabilités
         </h2>
-        <p className="text-sm text-text-secondary">
-          Données issues de la{" "}
+        <p className="text-sm text-text-muted">
+          Données{" "}
           <a
             href="https://nvd.nist.gov/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-accent hover:underline"
           >
-            National Vulnerability Database
-          </a>{" "}
-          (NVD). Mise à jour toutes les 30 minutes.
+            NVD
+          </a>
+          {" "}· mise à jour toutes les 30 min.
         </p>
       </div>
       <CveDashboard />

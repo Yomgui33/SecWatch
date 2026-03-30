@@ -65,7 +65,7 @@ export default function CveDashboard() {
       {loading ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="border border-border rounded-lg p-4 animate-pulse">
+            <div key={i} className="card p-4 animate-pulse">
               <div className="flex gap-3">
                 <div className="w-14 h-14 bg-surface-alt rounded-md" />
                 <div className="flex-1 space-y-2">
@@ -82,7 +82,7 @@ export default function CveDashboard() {
           <p className="text-sm text-severity-high mb-3">{error}</p>
           <button
             onClick={fetchData}
-            className="px-4 py-2 text-sm border border-border rounded-md hover:bg-surface-hover transition-colors cursor-pointer"
+            className="pill"
           >
             Réessayer
           </button>

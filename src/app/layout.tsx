@@ -1,8 +1,22 @@
 import type { Metadata } from "next";
+import { DM_Sans, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import NavLink from "@/components/ui/NavLink";
 import Logo from "@/components/ui/Logo";
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
+  display: "swap",
+});
+
+const instrumentSerif = Instrument_Serif({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-instrument-serif",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "SecWatch — Veille cybersécurité",
@@ -11,7 +25,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html lang="fr" suppressHydrationWarning className={`${dmSans.variable} ${instrumentSerif.variable}`}>
       <head>
         {/* Empêcher le flash de thème incorrect */}
         <script
@@ -21,13 +35,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-screen bg-surface text-text-primary">
-        <header className="sticky top-0 z-40 bg-surface/95 backdrop-blur-sm border-b border-border">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-            <div className="flex items-center gap-5">
+        <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md border-b border-border">
+          <div className="max-w-5xl mx-auto px-5 sm:px-8 h-14 flex items-center justify-between">
+            <div className="flex items-center gap-6">
               <a href="/" className="shrink-0">
                 <Logo />
               </a>
-              <nav className="flex items-center gap-3 border-l border-border pl-4">
+              <nav className="flex items-center gap-1">
                 <NavLink href="/">Brief</NavLink>
                 <NavLink href="/brief">Vulnérabilités</NavLink>
                 <NavLink href="/news">News</NavLink>
@@ -37,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <ThemeToggle />
           </div>
         </header>
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6">{children}</main>
+        <main className="max-w-5xl mx-auto px-5 sm:px-8 py-8">{children}</main>
       </body>
     </html>
   );

@@ -44,41 +44,37 @@ export default function CveFilters({ filters, onChange, totalResults }: Props) {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Période */}
       <div>
-        <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
+        <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2.5">
           Période
         </h3>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {DATE_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setDateFilter(opt.value)}
-              className={`px-3 py-1.5 text-xs rounded-md border transition-colors cursor-pointer ${
-                filters.dateFilter === opt.value
-                  ? "border-accent bg-accent-light text-accent font-medium"
-                  : "border-border text-text-secondary hover:bg-surface-hover"
-              }`}
+              className={`pill ${filters.dateFilter === opt.value ? "pill-active" : ""}`}
             >
               {opt.label}
             </button>
           ))}
         </div>
         {filters.dateFilter === "custom" && (
-          <div className="flex flex-wrap gap-2 mt-2">
+          <div className="flex flex-wrap gap-2 mt-2.5">
             <input
               type="date"
               value={filters.customStart ?? ""}
               onChange={(e) => onChange({ ...filters, customStart: e.target.value })}
-              className="px-2 py-1 text-xs border border-border rounded-md bg-surface text-text-primary"
+              className="px-3 py-1.5 text-xs border border-border rounded-full bg-surface text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
             />
             <span className="text-text-muted text-xs self-center">au</span>
             <input
               type="date"
               value={filters.customEnd ?? ""}
               onChange={(e) => onChange({ ...filters, customEnd: e.target.value })}
-              className="px-2 py-1 text-xs border border-border rounded-md bg-surface text-text-primary"
+              className="px-3 py-1.5 text-xs border border-border rounded-full bg-surface text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
         )}
@@ -86,10 +82,10 @@ export default function CveFilters({ filters, onChange, totalResults }: Props) {
 
       {/* Sévérité */}
       <div>
-        <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
+        <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2.5">
           Sévérité
         </h3>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {SEVERITIES.map((sev) => {
             const cfg = SEVERITY_CONFIG[sev];
             const active = filters.severities.includes(sev);
@@ -97,10 +93,10 @@ export default function CveFilters({ filters, onChange, totalResults }: Props) {
               <button
                 key={sev}
                 onClick={() => toggleSeverity(sev)}
-                className={`px-3 py-1.5 text-xs rounded-md border transition-colors cursor-pointer ${
+                className={`pill ${
                   active
-                    ? `${cfg.bgClass} ${cfg.textClass} border-current font-medium`
-                    : "border-border text-text-secondary hover:bg-surface-hover"
+                    ? `${cfg.bgClass} ${cfg.textClass} !border-current font-medium`
+                    : ""
                 }`}
               >
                 {cfg.label}
@@ -118,11 +114,7 @@ export default function CveFilters({ filters, onChange, totalResults }: Props) {
             <button
               key={opt.value}
               onClick={() => onChange({ ...filters, sortBy: opt.value })}
-              className={`px-3 py-1.5 text-xs rounded-md border transition-colors cursor-pointer ${
-                filters.sortBy === opt.value
-                  ? "border-accent bg-accent-light text-accent font-medium"
-                  : "border-border text-text-secondary hover:bg-surface-hover"
-              }`}
+              className={`pill ${filters.sortBy === opt.value ? "pill-active" : ""}`}
             >
               {opt.label}
             </button>

@@ -52,7 +52,7 @@ function SettingRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 p-3 rounded-lg border border-border">
+    <div className="flex items-center justify-between gap-4 p-4 card">
       <div>
         <p className="text-sm font-medium text-text-primary">{label}</p>
         <p className="text-xs text-text-muted mt-0.5">{description}</p>
@@ -61,6 +61,7 @@ function SettingRow({
     </div>
   );
 }
+
 
 export default function SettingsForm() {
   const [settings, setSettings] = useState<Settings>({
@@ -134,7 +135,7 @@ export default function SettingsForm() {
           </SettingRow>
 
           {settings.briefShowCves && (
-            <div className="flex items-center justify-between gap-4 p-3 ml-4 rounded-lg border border-border border-dashed">
+            <div className="flex items-center justify-between gap-4 p-4 ml-5 card border-dashed">
               <div>
                 <p className="text-sm font-medium text-text-primary">
                   Sévérité minimum
@@ -148,7 +149,7 @@ export default function SettingsForm() {
                 onChange={(e) =>
                   update({ briefMinSeverity: e.target.value as BriefSeverity })
                 }
-                className="px-3 py-1.5 text-sm rounded-md border border-border bg-surface text-text-primary cursor-pointer focus:outline-none focus:ring-1 focus:ring-accent"
+                className="px-3 py-1.5 text-sm rounded-full border border-border bg-surface text-text-primary cursor-pointer focus:outline-none focus:ring-1 focus:ring-accent"
               >
                 {SEVERITY_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>

@@ -49,20 +49,16 @@ export default function RssFeedFilter({
   return (
     <div className="space-y-3">
       {/* Contrôles globaux */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap">
         <button
           onClick={onToggleHideRead}
-          className={`px-3 py-1.5 text-xs rounded-md border transition-colors cursor-pointer ${
-            hideRead
-              ? "border-accent bg-accent-light text-accent font-medium"
-              : "border-border text-text-secondary hover:bg-surface-hover"
-          }`}
+          className={`pill ${hideRead ? "pill-active" : ""}`}
         >
           Masquer les lus
         </button>
         <button
           onClick={onMarkAllRead}
-          className="px-3 py-1.5 text-xs rounded-md border border-border text-text-secondary hover:bg-surface-hover transition-colors cursor-pointer"
+          className="pill"
         >
           Tout marquer lu
         </button>
@@ -80,11 +76,7 @@ export default function RssFeedFilter({
             <button
               key={stat.id}
               onClick={() => onToggleFeed(stat.id)}
-              className={`px-2.5 py-1 text-xs rounded-md border transition-colors cursor-pointer ${
-                isSelected
-                  ? "border-accent bg-accent-light text-accent font-medium"
-                  : "border-border text-text-muted hover:bg-surface-hover"
-              }`}
+              className={`pill ${isSelected ? "pill-active" : ""}`}
             >
               {stat.name}
               {stat.unread > 0 && (
