@@ -110,6 +110,20 @@ export default function NewsDashboard() {
     if (filters.activeSource === "rss") fetchRss();
   }, [filters.activeSource, fetchTweets, fetchRss]);
 
+  // --- Sync RSS read state on tab focus ---
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && rssFetched.current) {
+        fetch("/api/news/rss/read")
+          .then((r) => r.json())
+          .then((data) => setReadIds(new Set(data.readIds ?? [])))
+          .catch(() => {});
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
+
   // --- RSS: toggle read ---
   const handleToggleRead = async (id: string, read: boolean) => {
     // Optimistic update

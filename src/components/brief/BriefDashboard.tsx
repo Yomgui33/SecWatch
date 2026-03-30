@@ -125,6 +125,20 @@ export default function BriefDashboard() {
     })();
   }, []);
 
+  // --- Sync RSS read state on tab focus ---
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && data) {
+        fetch("/api/news/rss/read")
+          .then((r) => r.json())
+          .then((d) => setRssReadIds(new Set(d.readIds ?? [])))
+          .catch(() => {});
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [data]);
+
   // --- Generic toggle helpers ---
 
   const toggleRead = (
