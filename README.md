@@ -1,25 +1,51 @@
 # SecWatch
 
-Dashboard de veille cybersecurite : suivi des CVE critiques, flux RSS netsec, fil Twitter/X et brief quotidien.
+SecWatch est un tableau de bord de veille cybersécurité pensé pour un usage quotidien : suivi des CVE récentes, agrégation RSS netsec, consultation du fil Twitter / X et lecture d'un brief consolidé.
 
-Built with Next.js, Tailwind CSS and Upstash Redis.
+Cette branche correspond à la version de référence actuellement déployable et optimisée pour Vercel.
 
-## Fonctionnalites
+## Stack
 
-- **Brief quotidien** (`/brief`) — vue consolidee des dernieres 24h : CVE critiques, articles RSS non lus, tweets. Chaque element peut etre marque comme lu individuellement ou par section.
-- **Vulnerabilites** (`/`) — suivi des CVE depuis la National Vulnerability Database (NVD), filtrables par severite, periode et tri.
-- **News** (`/news`) — deux onglets :
-  - **Twitter / X** — fil "Following" (chronologique, sans suggestions). Supporte les tweets longs, retweets complets, quote tweets, link preview cards et avatars.
-  - **RSS** — agregation de flux RSS/Atom avec suivi lu/non-lu, filtre par source, masquage des lus.
-  - **LinkedIn** — lien direct vers le feed LinkedIn.
-- **Administration** (`/admin`) — preferences (marquage automatique au clic), gestion des cookies Twitter/X, gestion des flux RSS (ajout, suppression, reinitialisation des flux par defaut).
+- Next.js 16
+- React 19
+- Tailwind CSS 4
+- Upstash Redis
 
-## Prerequis
+## Fonctionnalités
 
-- Node.js >= 18
-- Un compte [Upstash](https://console.upstash.com/) (Redis gratuit)
+- ` / ` : brief du jour avec les nouveautés des dernières 24h
+- ` /brief ` : suivi des vulnérabilités issues de la NVD
+- ` /news ` : onglets Twitter / X et RSS
+- ` /admin ` : configuration technique et préférences
 
-## Installation
+Le brief agrège :
+
+- les CVE selon le niveau de gravité configuré
+- les articles RSS non lus
+- les tweets / X non lus
+
+Fonctions principales déjà en place :
+
+- authentification par mot de passe avec option `rester connecté`
+- mot de passe modifiable depuis `/admin`
+- stockage des préférences, états de lecture, flux RSS et cookies X dans Redis
+- configuration runtime plus robuste pour Vercel
+- interface responsive avec ajustements mobile récents
+
+## Pages principales
+
+- `/` : brief du jour
+- `/brief` : vulnérabilités
+- `/news` : veille Twitter / X + RSS
+- `/admin` : services, sécurité, préférences, flux RSS
+- `/login` : accès protégé
+
+## Prérequis
+
+- Node.js 18+
+- un compte Upstash Redis
+
+## Installation locale
 
 ```bash
 git clone https://github.com/Yomgui33/SecWatch.git
@@ -29,77 +55,139 @@ npm install
 
 ## Configuration locale
 
-Creer un fichier `.env.local` a la racine du projet :
+Créer un fichier `.env.local` à la racine :
 
 ```env
-# Cle API NVD (optionnelle, augmente le rate limit de 5 a 50 req/30s)
-# Demander une cle sur : https://nvd.nist.gov/developers/request-an-api-key
+# NVD
 NVD_API_KEY=
 
-# Upstash Redis (pour stocker les credentials, flux RSS, etats de lecture)
-# Creer un store gratuit sur https://console.upstash.com/
-# Puis copier les valeurs REST depuis l'onglet "REST API"
+# Redis
 KV_REST_API_URL=
 KV_REST_API_TOKEN=
+
+# Optionnel : bootstrap du mot de passe sans Redis
+SECWATCH_PASSWORD=
+# ou hash déjà préparé
+SECWATCH_PASSWORD_HASH=
+
+# Optionnel : fallback X si besoin
+X_AUTH_TOKEN=
+X_CT0=
+X_SCREEN_NAME=
 ```
 
-En local, les credentials Redis et la cle NVD peuvent aussi etre saisis depuis la page `/admin` : l'application les persiste alors dans `.env.local` et `.secwatch-config.json`.
+Notes :
 
-Les credentials Twitter/X se configurent depuis la page `/admin` de l'application.
+- en local, la page `/admin` peut écrire dans `.env.local` et `.secwatch-config.json`
+- les aliases `KV_REST_API_URL` / `KV_REST_API_TOKEN` restent pratiques en développement
+- le mot de passe par défaut au tout premier lancement reste `SecWatch4you` tant qu'il n'a pas été remplacé
 
-## Deploiement Vercel
+## Déploiement Vercel
 
-Sur Vercel, l'application ne peut pas ecrire dans `.env.local` au runtime. Il faut donc definir les variables d'environnement dans le dashboard Vercel avant le deploiement :
+Cette version est préparée en priorité pour Vercel.
+
+Sur Vercel, l'application ne peut pas écrire dans `.env.local` au runtime. La configuration doit donc être fournie via les variables d'environnement du projet.
+
+Variables recommandées :
 
 ```env
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
 NVD_API_KEY=
-
-# Bootstrap du mot de passe si Redis n'est pas encore configure
 SECWATCH_PASSWORD=
-# ou sa version déjà hashée
 SECWATCH_PASSWORD_HASH=
 ```
 
-Notes :
+Comportement attendu :
 
-- `UPSTASH_REDIS_REST_URL` et `UPSTASH_REDIS_REST_TOKEN` sont les noms recommandes sur Vercel.
-- Les aliases `KV_REST_API_URL` et `KV_REST_API_TOKEN` restent supportes pour le developpement local.
-- Si Redis n'est pas encore configure au premier deploy, definissez `SECWATCH_PASSWORD` (ou `SECWATCH_PASSWORD_HASH`) pour eviter toute ouverture avec le mot de passe par defaut.
-- Les cookies Twitter/X, les preferences et les flux RSS admin continuent d'etre stockes dans Redis.
-- Apres ajout ou modification des variables d'environnement sur Vercel, redeployer l'application.
+- `UPSTASH_REDIS_REST_URL` et `UPSTASH_REDIS_REST_TOKEN` sont les noms recommandés sur Vercel
+- `SECWATCH_PASSWORD` ou `SECWATCH_PASSWORD_HASH` permettent un bootstrap sécurisé si Redis n'est pas encore branché
+- Redis reste nécessaire pour stocker :
+  - les cookies Twitter / X
+  - les préférences utilisateur
+  - les flux RSS personnalisés
+  - les états de lecture
 
-## Lancement en mode dev
+Important :
+
+- après ajout ou modification d'une variable d'environnement dans Vercel, il faut redéployer
+- si Redis est indisponible sur Vercel, l'authentification échoue proprement au lieu de retomber silencieusement sur un mot de passe par défaut
+
+## Scripts
 
 ```bash
 npm run dev
+npm run build
+npm run start
+npm run lint
 ```
 
-L'application est accessible sur [http://localhost:3000](http://localhost:3000).
+`npm run lint` exécute actuellement :
 
-## Flux RSS par defaut
+```bash
+tsc --noEmit
+```
 
-Au premier lancement, SecWatch charge automatiquement 17 flux RSS de la communaute netsec (Krebs on Security, PortSwigger Research, Synacktiv, TrustedSec, Rapid7, etc.). Ils peuvent etre geres depuis `/admin` > Flux RSS.
+## Authentification
 
-## Integrer des newsletters
+- accès protégé par mot de passe
+- option `rester connecté` via cookie de session persistant
+- changement du mot de passe depuis `/admin`
+- sur Vercel, le stockage de l'auth repose sur Redis ou sur `SECWATCH_PASSWORD(_HASH)` pour le bootstrap
 
-Pour integrer des newsletters cybersecurite dans le module RSS :
+## Sources de données
 
-1. Verifier si la newsletter propose un flux RSS natif (Substack : `newsletter.substack.com/feed`, Ghost : `/rss/`, Beehiiv : `/feed`). Si oui, l'ajouter directement dans `/admin` > Flux RSS.
+### NVD
 
-2. Si la newsletter n'a pas de RSS, utiliser [kill-the-newsletter.com](https://kill-the-newsletter.com) :
-   - Creer une boite aux lettres (ex: "secwatch-tldr")
-   - Le service fournit une adresse email (`xxxxx@kill-the-newsletter.com`) et un flux Atom (`https://kill-the-newsletter.com/feeds/xxxxx.xml`)
-   - S'abonner a la newsletter avec cette adresse email
-   - Ajouter le flux Atom dans `/admin` > Flux RSS > Ajouter un flux
+- source des vulnérabilités affichées dans `/brief`
+- `NVD_API_KEY` est optionnelle mais recommandée pour améliorer le rate limit
 
-Chaque email recu apparaitra automatiquement dans l'onglet RSS de SecWatch.
+### RSS
 
-## Todo
+- un ensemble de flux RSS par défaut est amorcé automatiquement
+- les flux peuvent être ajoutés, supprimés ou réinitialisés depuis `/admin`
+- les newsletters sans RSS natif peuvent être intégrées via `kill-the-newsletter.com`
 
-1. Partiellement traité : le bootstrap du mot de passe peut se faire via `SECWATCH_PASSWORD` ou `SECWATCH_PASSWORD_HASH` si Redis n'est pas encore configuré. Redis reste néanmoins nécessaire pour stocker les cookies X, les préférences et les flux RSS.
+### Twitter / X
 
-2. Ajouter des options de configuration dans la page /admin pour le contenu du /brief : quelles sources doivent être affichées ou non (X/RSS/Vulns) et le niveau de gravité des vulns.
+- SecWatch utilise les cookies `auth_token` et `ct0`
+- la connexion se configure depuis `/admin`
+- le `screenName` est mémorisé pour garder un affichage plus fiable dans l'admin
 
-3. Implémenté : accès protégé par mot de passe, option "rester connecté" sur l'appareil courant, mot de passe par défaut `SecWatch4you` au premier lancement, modifiable depuis `/admin`.
+## Flux RSS par défaut
+
+Au premier lancement, SecWatch charge automatiquement un set de flux netsec de référence. Ils peuvent ensuite être ajustés dans `/admin > Flux RSS`.
+
+## Intégrer des newsletters
+
+Si une newsletter fournit déjà un flux :
+
+- Substack : `newsletter.substack.com/feed`
+- Ghost : `/rss/`
+- Beehiiv : `/feed`
+
+Sinon :
+
+1. créer une boîte sur [kill-the-newsletter.com](https://kill-the-newsletter.com)
+2. récupérer l'adresse email générée et le flux Atom associé
+3. s'abonner à la newsletter avec cette adresse
+4. ajouter le flux Atom dans `/admin > Flux RSS`
+
+## État du projet
+
+Déjà implémenté :
+
+- protection par mot de passe
+- branchement propre sur Vercel
+- gestion des erreurs de bootstrap et de stockage plus robuste
+- support mobile amélioré
+
+Reste à faire :
+
+1. finaliser complètement la stratégie de bootstrap sans Redis pour les fonctions non liées à l'auth
+2. continuer à affiner l'expérience mobile sur les écrans les plus étroits
+3. ajouter un favicon dédié propre à l'identité visuelle SecWatch
+
+## Branche de déploiement
+
+La branche `Vercel` est actuellement la branche de référence pour le déploiement.
