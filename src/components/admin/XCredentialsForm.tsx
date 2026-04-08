@@ -51,7 +51,9 @@ export default function XCredentialsForm() {
 
       setMessage({
         type: "success",
-        text: `Connecté en tant que @${data.screenName}`,
+        text: data.screenName
+          ? `Connecté en tant que @${data.screenName}`
+          : "Cookies enregistrés avec succès.",
       });
       setAuthToken("");
       setCt0("");
@@ -99,8 +101,14 @@ export default function XCredentialsForm() {
           <div className="text-sm">
             {status.configured && status.valid ? (
               <span>
-                Connecté en tant que{" "}
-                <span className="font-medium">@{status.screenName}</span>
+                {status.screenName ? (
+                  <>
+                    Connecté en tant que{" "}
+                    <span className="font-medium">@{status.screenName}</span>
+                  </>
+                ) : (
+                  "Connecté"
+                )}
               </span>
             ) : status.configured && !status.valid ? (
               <span className="text-severity-high">

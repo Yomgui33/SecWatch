@@ -1,10 +1,13 @@
 import CveDashboard from "@/components/cve/CveDashboard";
+import { requirePageAuth } from "@/lib/auth";
 
 export const metadata = {
   title: "Vulnérabilités — SecWatch",
 };
 
-export default function VulnerabilitiesPage() {
+export default async function VulnerabilitiesPage() {
+  await requirePageAuth();
+
   return (
     <div>
       <div className="mb-8">

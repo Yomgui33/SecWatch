@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ensureApiAuthenticated } from "@/lib/auth";
 import { getRssFeeds, addRssFeed, removeRssFeed, saveRssFeeds } from "@/lib/sources/rss/feeds";
 import { feedIdFromUrl } from "@/lib/sources/rss/types";
 import { DEFAULT_FEEDS } from "@/lib/sources/rss/seed";
@@ -6,11 +7,17 @@ import { DEFAULT_FEEDS } from "@/lib/sources/rss/seed";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const unauthorized = await ensureApiAuthenticated();
+  if (unauthorized) return unauthorized;
+
   const feeds = await getRssFeeds();
   return NextResponse.json({ feeds });
 }
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await ensureApiAuthenticated();
+  if (unauthorized) return unauthorized;
+
   const body = await req.json();
 
   // Seed des flux par défaut
@@ -31,6 +38,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const unauthorized = await ensureApiAuthenticated();
+  if (unauthorized) return unauthorized;
+
   const { id } = await req.json();
   if (!id) {
     return NextResponse.json({ error: "id manquant" }, { status: 400 });

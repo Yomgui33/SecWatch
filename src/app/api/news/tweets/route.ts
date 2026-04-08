@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
+import { ensureApiAuthenticated } from "@/lib/auth";
 import { fetchHomeTimeline } from "@/lib/sources/twitter/api";
 import { getXCredentials } from "@/lib/sources/twitter/credentials";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const unauthorized = await ensureApiAuthenticated();
+  if (unauthorized) return unauthorized;
+
   const creds = await getXCredentials();
 
   if (!creds) {

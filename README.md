@@ -94,6 +94,6 @@ Chaque email recu apparaitra automatiquement dans l'onglet RSS de SecWatch.
 
 1. Ajouter une vraie stratégie "bootstrap" pour le premier déploiement Vercel si Redis n'est pas encore configuré, car la connexion Redis reste nécessaire avant de pouvoir stocker les cookies X ou les préférences.
 
-2. Ajouter des options de configuration dans la page /admin pour le contenu du brief : quelles sources doivent être affichées ou non (X/RSS/Vulns) et le niveau de gravité des vulns.
+2. Ajouter des options de configuration dans la page /admin pour le contenu du /brief : quelles sources doivent être affichées ou non (X/RSS/Vulns) et le niveau de gravité des vulns.
 
-3. Protéger l'accès au site par un mot de passe avec l'option "rester connecté" afin de le saisir une seule fois sur une machine donnée. Ce mot de passe doit être défini et modifiable dans la section /admin avec un mot de passe par défaut lors du premier lancement "SecWatch4you". 
+3. Implémenté : accès protégé par mot de passe, option "rester connecté" sur l'appareil courant, mot de passe par défaut `SecWatch4you` au premier lancement, modifiable depuis `/admin`.

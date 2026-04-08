@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ensureApiAuthenticated } from "@/lib/auth";
 import { getReadIds, markAsRead, markAsUnread, markManyAsRead } from "@/lib/sources/rss/feeds";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const unauthorized = await ensureApiAuthenticated();
+  if (unauthorized) return unauthorized;
+
   const readIds = await getReadIds();
   return NextResponse.json({ readIds });
 }
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await ensureApiAuthenticated();
+  if (unauthorized) return unauthorized;
+
   const body = await req.json();
 
   // Marquer plusieurs articles comme lus

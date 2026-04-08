@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ensureApiAuthenticated } from "@/lib/auth";
 import { verifyCredentials } from "@/lib/sources/twitter/api";
 import {
   getXCredentials,
@@ -8,6 +9,9 @@ import {
 
 // GET — vérifier si des credentials existent et sont valides
 export async function GET() {
+  const unauthorized = await ensureApiAuthenticated();
+  if (unauthorized) return unauthorized;
+
   const creds = await getXCredentials();
 
   if (!creds) {
@@ -18,12 +22,15 @@ export async function GET() {
   return NextResponse.json({
     configured: true,
     valid: result.valid,
-    screenName: result.screenName ?? null,
+    screenName: result.screenName ?? creds.screenName ?? null,
   });
 }
 
 // POST — sauvegarder de nouveaux credentials
 export async function POST(request: NextRequest) {
+  const unauthorized = await ensureApiAuthenticated();
+  if (unauthorized) return unauthorized;
+
   try {
     const { authToken, ct0 } = await request.json();
 
@@ -37,6 +44,7 @@ export async function POST(request: NextRequest) {
     const clean = {
       authToken: authToken.trim(),
       ct0: ct0.trim(),
+      screenName: undefined as string | undefined,
     };
 
     // Vérifier que les credentials fonctionnent
@@ -47,6 +55,8 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    clean.screenName = result.screenName;
 
     await saveXCredentials(clean);
 
@@ -64,6 +74,9 @@ export async function POST(request: NextRequest) {
 
 // DELETE — supprimer les credentials
 export async function DELETE() {
+  const unauthorized = await ensureApiAuthenticated();
+  if (unauthorized) return unauthorized;
+
   try {
     await deleteXCredentials();
     return NextResponse.json({ success: true });

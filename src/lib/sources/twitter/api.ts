@@ -9,6 +9,7 @@ const BEARER_TOKEN =
 export interface XCredentials {
   authToken: string;
   ct0: string;
+  screenName?: string;
 }
 
 function getAuthHeaders(creds: XCredentials): Record<string, string> {

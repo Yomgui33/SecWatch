@@ -18,7 +18,8 @@ export async function getXCredentials(): Promise<XCredentials | null> {
   // 2. Fallback sur les variables d'environnement
   const authToken = process.env.X_AUTH_TOKEN;
   const ct0 = process.env.X_CT0;
-  if (authToken && ct0) return { authToken, ct0 };
+  const screenName = process.env.X_SCREEN_NAME;
+  if (authToken && ct0) return { authToken, ct0, screenName };
 
   return null;
 }

@@ -8,6 +8,7 @@ export interface RuntimeConfig {
   KV_REST_API_URL?: string;
   KV_REST_API_TOKEN?: string;
   NVD_API_KEY?: string;
+  SECWATCH_PASSWORD_HASH?: string;
 }
 
 export function isManagedHosting(): boolean {
@@ -30,6 +31,7 @@ export function getRuntimeConfig(): RuntimeConfig {
       if (data.KV_REST_API_URL) config.KV_REST_API_URL = data.KV_REST_API_URL;
       if (data.KV_REST_API_TOKEN) config.KV_REST_API_TOKEN = data.KV_REST_API_TOKEN;
       if (data.NVD_API_KEY) config.NVD_API_KEY = data.NVD_API_KEY;
+      if (data.SECWATCH_PASSWORD_HASH) config.SECWATCH_PASSWORD_HASH = data.SECWATCH_PASSWORD_HASH;
     } catch {
       // ignore parse errors
     }
@@ -45,6 +47,9 @@ export function getRuntimeConfig(): RuntimeConfig {
       readEnv("KV_REST_API_TOKEN") ?? readEnv("UPSTASH_REDIS_REST_TOKEN");
   }
   if (!config.NVD_API_KEY) config.NVD_API_KEY = readEnv("NVD_API_KEY");
+  if (!config.SECWATCH_PASSWORD_HASH) {
+    config.SECWATCH_PASSWORD_HASH = readEnv("SECWATCH_PASSWORD_HASH");
+  }
 
   return config;
 }
@@ -95,6 +100,9 @@ function writeEnvLocal(config: RuntimeConfig) {
   if (config.KV_REST_API_URL) entries.KV_REST_API_URL = config.KV_REST_API_URL;
   if (config.KV_REST_API_TOKEN) entries.KV_REST_API_TOKEN = config.KV_REST_API_TOKEN;
   if (config.NVD_API_KEY !== undefined) entries.NVD_API_KEY = config.NVD_API_KEY ?? "";
+  if (config.SECWATCH_PASSWORD_HASH !== undefined) {
+    entries.SECWATCH_PASSWORD_HASH = config.SECWATCH_PASSWORD_HASH ?? "";
+  }
 
   const lines = Object.entries(entries).map(([k, v]) => `${k}=${v}`);
   writeFileSync(ENV_FILE, lines.join("\n") + "\n", "utf-8");

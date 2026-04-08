@@ -1,13 +1,17 @@
 import EnvConfigForm from "@/components/admin/EnvConfigForm";
+import PasswordSettingsForm from "@/components/admin/PasswordSettingsForm";
 import XCredentialsForm from "@/components/admin/XCredentialsForm";
 import RssFeedsManager from "@/components/admin/RssFeedsManager";
 import SettingsForm from "@/components/admin/SettingsForm";
+import { requirePageAuth } from "@/lib/auth";
 
 export const metadata = {
   title: "Admin — SecWatch",
 };
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  await requirePageAuth();
+
   return (
     <div className="max-w-2xl">
       <div className="mb-10">
@@ -45,6 +49,16 @@ export default function AdminPage() {
             Préférences
           </h3>
           <SettingsForm />
+        </section>
+
+        <section className="space-y-4">
+          <h3 className="text-sm font-medium uppercase tracking-wider text-text-muted">
+            Sécurité
+          </h3>
+          <p className="text-sm text-text-secondary leading-relaxed">
+            Protégez l&apos;accès à SecWatch et remplacez le mot de passe par défaut.
+          </p>
+          <PasswordSettingsForm />
         </section>
 
         <section className="space-y-4">

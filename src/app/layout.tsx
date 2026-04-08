@@ -3,13 +3,17 @@ import "./globals.css";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import NavLink from "@/components/ui/NavLink";
 import Logo from "@/components/ui/Logo";
+import LogoutButton from "@/components/auth/LogoutButton";
+import { isCurrentSessionAuthenticated } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "SecWatch — Veille cybersécurité",
   description: "Tableau de bord de veille cybersécurité : CVE, alertes et actualités.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const authenticated = await isCurrentSessionAuthenticated();
+
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
@@ -27,14 +31,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <a href="/" className="shrink-0">
                 <Logo />
               </a>
-              <nav className="flex items-center gap-1">
-                <NavLink href="/">Brief</NavLink>
-                <NavLink href="/brief">Vulnérabilités</NavLink>
-                <NavLink href="/news">News</NavLink>
-                <NavLink href="/admin">Admin</NavLink>
-              </nav>
+              {authenticated && (
+                <nav className="flex items-center gap-1">
+                  <NavLink href="/">Brief</NavLink>
+                  <NavLink href="/brief">Vulnérabilités</NavLink>
+                  <NavLink href="/news">News</NavLink>
+                  <NavLink href="/admin">Admin</NavLink>
+                </nav>
+              )}
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              {authenticated && <LogoutButton />}
+              <ThemeToggle />
+            </div>
           </div>
         </header>
         <main className="max-w-5xl mx-auto px-5 sm:px-8 py-8">{children}</main>

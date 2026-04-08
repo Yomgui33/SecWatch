@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ensureApiAuthenticated } from "@/lib/auth";
 import { fetchCves, getDateRange } from "@/lib/sources/nvd/api";
 import { fetchAllArticles } from "@/lib/sources/rss/api";
 import { getRssFeeds, getReadIds, saveRssFeeds } from "@/lib/sources/rss/feeds";
@@ -18,6 +19,9 @@ const SEVERITY_ORDER: Record<BriefSeverity, number> = {
 };
 
 export async function GET() {
+  const unauthorized = await ensureApiAuthenticated();
+  if (unauthorized) return unauthorized;
+
   const range = getDateRange("24h");
   const h24Ago = new Date(range.start).getTime();
   const settings = await getSettings();

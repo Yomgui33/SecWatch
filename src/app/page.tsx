@@ -1,11 +1,14 @@
 import BriefDashboard from "@/components/brief/BriefDashboard";
+import { requirePageAuth } from "@/lib/auth";
 
 export const metadata = {
   title: "Brief du jour — SecWatch",
   description: "Résumé quotidien : vulnérabilités critiques, articles RSS et tweets des dernières 24h.",
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  await requirePageAuth();
+
   const today = new Date().toLocaleDateString("fr-FR", {
     weekday: "long",
     day: "numeric",

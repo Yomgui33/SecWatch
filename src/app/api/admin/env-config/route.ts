@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Redis } from "@upstash/redis";
+import { ensureApiAuthenticated } from "@/lib/auth";
 import { getRuntimeConfig, isManagedHosting, saveRuntimeConfig } from "@/lib/config";
 import { resetRedis } from "@/lib/kv";
 
@@ -7,6 +8,9 @@ export const dynamic = "force-dynamic";
 
 // GET — return current config status (masked values)
 export async function GET() {
+  const unauthorized = await ensureApiAuthenticated();
+  if (unauthorized) return unauthorized;
+
   const config = getRuntimeConfig();
   const managedHosting = isManagedHosting();
   return NextResponse.json({
@@ -20,6 +24,9 @@ export async function GET() {
 
 // POST — save new config values and test connection
 export async function POST(req: NextRequest) {
+  const unauthorized = await ensureApiAuthenticated();
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await req.json();
     const { kvUrl, kvToken, nvdApiKey } = body as {

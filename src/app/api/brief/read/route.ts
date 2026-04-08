@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ensureApiAuthenticated } from "@/lib/auth";
 import { getBriefReadIds, markBriefRead, markBriefUnread, markManyBriefRead } from "@/lib/sources/brief/read";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const unauthorized = await ensureApiAuthenticated();
+  if (unauthorized) return unauthorized;
+
   const [cveReadIds, tweetReadIds] = await Promise.all([
     getBriefReadIds("cves"),
     getBriefReadIds("tweets"),
@@ -12,6 +16,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await ensureApiAuthenticated();
+  if (unauthorized) return unauthorized;
+
   const body = await req.json();
   const { source } = body as { source: "cves" | "tweets" };
 

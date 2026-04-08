@@ -1,11 +1,14 @@
 import NewsDashboard from "@/components/news/NewsDashboard";
+import { requirePageAuth } from "@/lib/auth";
 
 export const metadata = {
   title: "News — SecWatch",
   description: "Veille cybersécurité : dernières publications Twitter/X de la communauté infosec.",
 };
 
-export default function NewsPage() {
+export default async function NewsPage() {
+  await requirePageAuth();
+
   return (
     <div>
       <div className="mb-8">

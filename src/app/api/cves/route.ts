@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ensureApiAuthenticated } from "@/lib/auth";
 import { fetchCves, getDateRange } from "@/lib/sources/nvd/api";
 import type { DateFilter } from "@/lib/sources/nvd/types";
 
 export async function GET(request: NextRequest) {
+  const unauthorized = await ensureApiAuthenticated();
+  if (unauthorized) return unauthorized;
+
   const params = request.nextUrl.searchParams;
   const dateFilter = (params.get("dateFilter") ?? "7d") as DateFilter;
   const customStart = params.get("customStart");
