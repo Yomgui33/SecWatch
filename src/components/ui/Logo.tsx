@@ -21,7 +21,7 @@ export default function Logo() {
     return () => observer.disconnect();
   }, []);
 
-  if (!mounted) return <div className="w-[120px] h-[36px]" />;
+  if (!mounted) return <div className="h-[32px] w-[106px] sm:h-[36px] sm:w-[120px]" />;
 
   return (
     <Image
@@ -29,7 +29,7 @@ export default function Logo() {
       alt="SecWatch"
       width={120}
       height={36}
-      style={{ width: "auto", height: "36px" }}
+      className="h-8 w-auto sm:h-9"
       priority
     />
   );
