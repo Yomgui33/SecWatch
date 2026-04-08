@@ -31,19 +31,31 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="min-h-screen bg-surface text-text-primary">
         <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md border-b border-border">
-          <div className="max-w-5xl mx-auto px-4 sm:px-8 py-3 sm:h-14 sm:py-0">
-            <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-              <a href="/" className="shrink-0">
-                <Logo />
-              </a>
-              <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+          <div className="max-w-5xl mx-auto px-4 sm:px-8 py-3 sm:py-0">
+            <div className="flex flex-wrap items-center justify-between gap-2 sm:h-14 sm:flex-nowrap sm:gap-6">
+              <div className="flex min-w-0 items-center gap-3 sm:gap-6">
+                <a href="/" className="shrink-0">
+                  <Logo />
+                </a>
+                {authenticated && (
+                  <nav className="hidden sm:block">
+                    <div className="flex items-center gap-1">
+                      <NavLink href="/">Brief</NavLink>
+                      <NavLink href="/brief">Vulnérabilités</NavLink>
+                      <NavLink href="/news">News</NavLink>
+                      <NavLink href="/admin">Admin</NavLink>
+                    </div>
+                  </nav>
+                )}
+              </div>
+              <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
                 {authenticated && <LogoutButton />}
                 <ThemeToggle />
               </div>
             </div>
             {authenticated && (
               <nav className="-mx-4 mt-3 overflow-x-auto px-4 sm:mx-0 sm:mt-0 sm:overflow-visible sm:px-0">
-                <div className="flex min-w-max items-center gap-1 sm:min-w-0 sm:gap-1">
+                <div className="flex min-w-max items-center gap-1 sm:hidden">
                   <NavLink href="/">Brief</NavLink>
                   <NavLink href="/brief">Vulnérabilités</NavLink>
                   <NavLink href="/news">News</NavLink>
