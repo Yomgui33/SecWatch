@@ -10,6 +10,8 @@ const SESSION_COOKIE = "secwatch_session";
 const REMEMBER_MAX_AGE = 60 * 60 * 24 * 30;
 const SESSION_MAX_AGE = 60 * 60 * 12;
 export const DEFAULT_APP_PASSWORD = "SecWatch4you";
+const AUTH_NOT_CONFIGURED = "auth_not_configured";
+const AUTH_STORE_UNAVAILABLE = "auth_store_unavailable";
 
 interface AuthRecord {
   passwordHash: string;
@@ -27,6 +29,18 @@ function encodeBase64Url(value: string): string {
 
 function decodeBase64Url(value: string): string {
   return Buffer.from(value, "base64url").toString("utf-8");
+}
+
+function getEnvPasswordHash(): string | undefined {
+  const config = getRuntimeConfig();
+  if (config.SECWATCH_PASSWORD_HASH) {
+    return config.SECWATCH_PASSWORD_HASH;
+  }
+
+  const plainPassword = process.env.SECWATCH_PASSWORD?.trim();
+  if (!plainPassword) return undefined;
+
+  return createPasswordHash(plainPassword, "secwatch-env-password-salt");
 }
 
 export function createPasswordHash(password: string, salt = randomBytes(16).toString("hex")): string {
@@ -55,16 +69,20 @@ async function readAuthRecord(): Promise<AuthRecord | null> {
       const data = await redis.get<AuthRecord>(AUTH_KV_KEY);
       if (data?.passwordHash) return data;
     } catch {
-      // ignore and fall back
+      throw new Error(AUTH_STORE_UNAVAILABLE);
     }
   }
 
-  const config = getRuntimeConfig();
-  if (config.SECWATCH_PASSWORD_HASH) {
+  const envPasswordHash = getEnvPasswordHash();
+  if (envPasswordHash) {
     return {
-      passwordHash: config.SECWATCH_PASSWORD_HASH,
+      passwordHash: envPasswordHash,
       updatedAt: new Date(0).toISOString(),
     };
+  }
+
+  if (!redis && isManagedHosting()) {
+    throw new Error(AUTH_NOT_CONFIGURED);
   }
 
   return null;
@@ -97,8 +115,10 @@ export async function getAuthRecord(): Promise<AuthRecord> {
 
   try {
     await writeAuthRecord(fallback);
-  } catch {
-    // Keep working even if persistence is not available yet.
+  } catch (error) {
+    if (isManagedHosting() || getRedis()) {
+      throw error;
+    }
   }
 
   return fallback;
@@ -147,6 +167,18 @@ function verifySessionToken(token: string, passwordHash: string): boolean {
   }
 }
 
+function readSessionPreference(token: string): boolean | null {
+  const [payload] = token.split(".");
+  if (!payload) return null;
+
+  try {
+    const parsed = JSON.parse(decodeBase64Url(payload)) as { remember?: boolean };
+    return typeof parsed.remember === "boolean" ? parsed.remember : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function isCurrentSessionAuthenticated(): Promise<boolean> {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
@@ -156,6 +188,17 @@ export async function isCurrentSessionAuthenticated(): Promise<boolean> {
   return verifySessionToken(token, passwordHash);
 }
 
+export async function getCurrentSessionRememberPreference(): Promise<boolean | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE)?.value;
+  if (!token) return null;
+
+  const { passwordHash } = await getAuthRecord();
+  if (!verifySessionToken(token, passwordHash)) return null;
+
+  return readSessionPreference(token);
+}
+
 export async function requirePageAuth(): Promise<void> {
   if (!(await isCurrentSessionAuthenticated())) {
     redirect("/login");
@@ -163,13 +206,25 @@ export async function requirePageAuth(): Promise<void> {
 }
 
 export async function redirectIfAuthenticated(): Promise<void> {
-  if (await isCurrentSessionAuthenticated()) {
-    redirect("/");
+  try {
+    if (await isCurrentSessionAuthenticated()) {
+      redirect("/");
+    }
+  } catch {
+    // Keep the login page reachable even if auth storage is temporarily unavailable.
   }
 }
 
 export async function ensureApiAuthenticated(): Promise<NextResponse | null> {
-  if (await isCurrentSessionAuthenticated()) return null;
+  try {
+    if (await isCurrentSessionAuthenticated()) return null;
+  } catch (error) {
+    const publicError = getPublicError(error);
+    return NextResponse.json(
+      { error: publicError.code, message: publicError.message },
+      { status: publicError.status }
+    );
+  }
 
   return NextResponse.json(
     { error: "unauthorized", message: "Authentification requise." },
@@ -235,4 +290,43 @@ export function clearSessionCookie(response: NextResponse): void {
     path: "/",
     maxAge: 0,
   });
+}
+
+export function getPublicError(error: unknown): {
+  code: string;
+  message: string;
+  status: number;
+} {
+  if (error instanceof Error) {
+    if (error.message === AUTH_NOT_CONFIGURED) {
+      return {
+        code: AUTH_NOT_CONFIGURED,
+        message:
+          "Authentification non configurée sur cette instance. Configurez Redis ou définissez SECWATCH_PASSWORD / SECWATCH_PASSWORD_HASH.",
+        status: 503,
+      };
+    }
+
+    if (error.message === AUTH_STORE_UNAVAILABLE) {
+      return {
+        code: AUTH_STORE_UNAVAILABLE,
+        message: "Le stockage d'authentification est temporairement indisponible.",
+        status: 503,
+      };
+    }
+
+    if (error.message === "Redis non configuré.") {
+      return {
+        code: "redis_not_configured",
+        message: error.message,
+        status: 400,
+      };
+    }
+  }
+
+  return {
+    code: "internal_error",
+    message: "Erreur interne.",
+    status: 500,
+  };
 }

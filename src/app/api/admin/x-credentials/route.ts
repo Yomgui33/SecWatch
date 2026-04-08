@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ensureApiAuthenticated } from "@/lib/auth";
+import { ensureApiAuthenticated, getPublicError } from "@/lib/auth";
 import { verifyCredentials } from "@/lib/sources/twitter/api";
 import {
   getXCredentials,
@@ -64,10 +64,11 @@ export async function POST(request: NextRequest) {
       success: true,
       screenName: result.screenName,
     });
-  } catch {
+  } catch (error) {
+    const publicError = getPublicError(error);
     return NextResponse.json(
-      { error: "Erreur lors de la sauvegarde." },
-      { status: 500 }
+      { error: publicError.code === "internal_error" ? "Erreur lors de la sauvegarde." : publicError.message },
+      { status: publicError.code === "internal_error" ? 500 : publicError.status }
     );
   }
 }
@@ -80,10 +81,11 @@ export async function DELETE() {
   try {
     await deleteXCredentials();
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    const publicError = getPublicError(error);
     return NextResponse.json(
-      { error: "Erreur lors de la suppression." },
-      { status: 500 }
+      { error: publicError.code === "internal_error" ? "Erreur lors de la suppression." : publicError.message },
+      { status: publicError.code === "internal_error" ? 500 : publicError.status }
     );
   }
 }

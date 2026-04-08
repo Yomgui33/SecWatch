@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { applySessionCookie, login } from "@/lib/auth";
+import { applySessionCookie, getPublicError, login } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({ success: true });
     applySessionCookie(response, session.token, session.maxAge);
     return response;
-  } catch {
-    return NextResponse.json({ error: "Connexion impossible." }, { status: 500 });
+  } catch (error) {
+    const publicError = getPublicError(error);
+    return NextResponse.json({ error: publicError.message }, { status: publicError.status });
   }
 }

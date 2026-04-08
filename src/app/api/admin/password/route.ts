@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   applySessionCookie,
   ensureApiAuthenticated,
+  getCurrentSessionRememberPreference,
+  getPublicError,
   isDefaultPasswordActive,
   login,
   updatePassword,
@@ -30,7 +32,8 @@ export async function POST(req: NextRequest) {
 
     await updatePassword(currentPassword, newPassword);
 
-    const nextSession = await login(newPassword, true);
+    const remember = (await getCurrentSessionRememberPreference()) ?? false;
+    const nextSession = await login(newPassword, remember);
     const response = NextResponse.json({ success: true });
     if (nextSession) {
       applySessionCookie(response, nextSession.token, nextSession.maxAge);
@@ -52,7 +55,8 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      const publicError = getPublicError(error);
+      return NextResponse.json({ error: publicError.message }, { status: publicError.status });
     }
 
     return NextResponse.json(

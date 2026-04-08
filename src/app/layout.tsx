@@ -12,7 +12,12 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const authenticated = await isCurrentSessionAuthenticated();
+  let authenticated = false;
+  try {
+    authenticated = await isCurrentSessionAuthenticated();
+  } catch {
+    authenticated = false;
+  }
 
   return (
     <html lang="fr" suppressHydrationWarning>

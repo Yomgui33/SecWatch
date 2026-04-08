@@ -55,13 +55,19 @@ Sur Vercel, l'application ne peut pas ecrire dans `.env.local` au runtime. Il fa
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
 NVD_API_KEY=
+
+# Bootstrap du mot de passe si Redis n'est pas encore configure
+SECWATCH_PASSWORD=
+# ou sa version déjà hashée
+SECWATCH_PASSWORD_HASH=
 ```
 
 Notes :
 
 - `UPSTASH_REDIS_REST_URL` et `UPSTASH_REDIS_REST_TOKEN` sont les noms recommandes sur Vercel.
 - Les aliases `KV_REST_API_URL` et `KV_REST_API_TOKEN` restent supportes pour le developpement local.
-- Les cookies Twitter/X continuent d'etre stockes dans Redis via `/admin`, donc Redis doit etre configure des le premier deploy.
+- Si Redis n'est pas encore configure au premier deploy, definissez `SECWATCH_PASSWORD` (ou `SECWATCH_PASSWORD_HASH`) pour eviter toute ouverture avec le mot de passe par defaut.
+- Les cookies Twitter/X, les preferences et les flux RSS admin continuent d'etre stockes dans Redis.
 - Apres ajout ou modification des variables d'environnement sur Vercel, redeployer l'application.
 
 ## Lancement en mode dev
@@ -92,7 +98,7 @@ Chaque email recu apparaitra automatiquement dans l'onglet RSS de SecWatch.
 
 ## Todo
 
-1. Ajouter une vraie stratégie "bootstrap" pour le premier déploiement Vercel si Redis n'est pas encore configuré, car la connexion Redis reste nécessaire avant de pouvoir stocker les cookies X ou les préférences.
+1. Partiellement traité : le bootstrap du mot de passe peut se faire via `SECWATCH_PASSWORD` ou `SECWATCH_PASSWORD_HASH` si Redis n'est pas encore configuré. Redis reste néanmoins nécessaire pour stocker les cookies X, les préférences et les flux RSS.
 
 2. Ajouter des options de configuration dans la page /admin pour le contenu du /brief : quelles sources doivent être affichées ou non (X/RSS/Vulns) et le niveau de gravité des vulns.
 
