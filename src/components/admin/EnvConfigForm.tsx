@@ -6,6 +6,8 @@ interface ConfigStatus {
   redisConfigured: boolean;
   redisUrl: string;
   nvdConfigured: boolean;
+  managedHosting: boolean;
+  configMode: "vercel-env" | "local-runtime";
 }
 
 export default function EnvConfigForm() {
@@ -95,6 +97,16 @@ export default function EnvConfigForm() {
 
   return (
     <div className="space-y-4">
+      {status?.managedHosting && (
+        <div className="card border-accent/30 bg-accent-light/40 p-4 text-sm text-text-secondary">
+          <p className="font-medium text-text-primary">Instance Vercel détectée</p>
+          <p className="mt-1 leading-relaxed">
+            Sur Vercel, SecWatch lit la configuration depuis les variables d&apos;environnement du projet.
+            Les secrets Redis et NVD doivent être définis dans le dashboard Vercel puis redéployés.
+          </p>
+        </div>
+      )}
+
       {/* Redis status */}
       {status && (
         <div
@@ -153,7 +165,7 @@ export default function EnvConfigForm() {
 
       {/* Buttons */}
       <div className="flex gap-2 flex-wrap">
-        {!showRedisForm && (
+        {!showRedisForm && !status?.managedHosting && (
           <button
             onClick={() => { setShowRedisForm(true); setMessage(null); }}
             className="px-4 py-2 text-sm pill"
@@ -161,7 +173,7 @@ export default function EnvConfigForm() {
             {status?.redisConfigured ? "Modifier la connexion Redis" : "Configurer Redis"}
           </button>
         )}
-        {!showNvdForm && (
+        {!showNvdForm && !status?.managedHosting && (
           <button
             onClick={() => { setShowNvdForm(true); setMessage(null); }}
             className="px-4 py-2 text-sm pill"
@@ -170,6 +182,28 @@ export default function EnvConfigForm() {
           </button>
         )}
       </div>
+
+      {status?.managedHosting && (
+        <div className="rounded-lg border border-border bg-surface-alt p-4 text-xs leading-relaxed text-text-secondary">
+          <p>
+            Variables attendues :
+            {" "}
+            <code className="font-mono">UPSTASH_REDIS_REST_URL</code>,
+            {" "}
+            <code className="font-mono">UPSTASH_REDIS_REST_TOKEN</code>,
+            {" "}
+            <code className="font-mono">NVD_API_KEY</code>.
+          </p>
+          <p className="mt-2">
+            Les aliases
+            {" "}
+            <code className="font-mono">KV_REST_API_URL</code>
+            {" "}et{" "}
+            <code className="font-mono">KV_REST_API_TOKEN</code>
+            {" "}restent supportés en local.
+          </p>
+        </div>
+      )}
 
       {/* Redis form */}
       {showRedisForm && (

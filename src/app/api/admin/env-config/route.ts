@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Redis } from "@upstash/redis";
-import { getRuntimeConfig, saveRuntimeConfig } from "@/lib/config";
+import { getRuntimeConfig, isManagedHosting, saveRuntimeConfig } from "@/lib/config";
 import { resetRedis } from "@/lib/kv";
 
 export const dynamic = "force-dynamic";
@@ -8,10 +8,13 @@ export const dynamic = "force-dynamic";
 // GET — return current config status (masked values)
 export async function GET() {
   const config = getRuntimeConfig();
+  const managedHosting = isManagedHosting();
   return NextResponse.json({
     redisConfigured: !!(config.KV_REST_API_URL && config.KV_REST_API_TOKEN),
     redisUrl: config.KV_REST_API_URL ? maskValue(config.KV_REST_API_URL) : "",
     nvdConfigured: !!config.NVD_API_KEY,
+    managedHosting,
+    configMode: managedHosting ? "vercel-env" : "local-runtime",
   });
 }
 
@@ -40,17 +43,31 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      saveRuntimeConfig({
-        KV_REST_API_URL: testUrl,
-        KV_REST_API_TOKEN: testToken,
-        ...(nvdApiKey !== undefined ? { NVD_API_KEY: nvdApiKey.trim() } : {}),
-      });
+      try {
+        saveRuntimeConfig({
+          KV_REST_API_URL: testUrl,
+          KV_REST_API_TOKEN: testToken,
+          ...(nvdApiKey !== undefined ? { NVD_API_KEY: nvdApiKey.trim() } : {}),
+        });
+      } catch (error) {
+        return NextResponse.json(
+          { error: error instanceof Error ? error.message : "Configuration impossible." },
+          { status: 400 }
+        );
+      }
 
       // Reset singleton so next call uses new credentials
       resetRedis();
     } else if (nvdApiKey !== undefined) {
       // Only updating NVD key
-      saveRuntimeConfig({ NVD_API_KEY: nvdApiKey.trim() });
+      try {
+        saveRuntimeConfig({ NVD_API_KEY: nvdApiKey.trim() });
+      } catch (error) {
+        return NextResponse.json(
+          { error: error instanceof Error ? error.message : "Configuration impossible." },
+          { status: 400 }
+        );
+      }
     } else {
       return NextResponse.json(
         { error: "Aucune donnée à sauvegarder." },

@@ -10,6 +10,15 @@ export interface RuntimeConfig {
   NVD_API_KEY?: string;
 }
 
+export function isManagedHosting(): boolean {
+  return process.env.VERCEL === "1";
+}
+
+function readEnv(name: string): string | undefined {
+  const value = process.env[name]?.trim();
+  return value ? value : undefined;
+}
+
 /** Read runtime config from .secwatch-config.json (falls back to env vars) */
 export function getRuntimeConfig(): RuntimeConfig {
   const config: RuntimeConfig = {};
@@ -26,16 +35,28 @@ export function getRuntimeConfig(): RuntimeConfig {
     }
   }
 
-  // Fall back to env vars
-  if (!config.KV_REST_API_URL) config.KV_REST_API_URL = process.env.KV_REST_API_URL;
-  if (!config.KV_REST_API_TOKEN) config.KV_REST_API_TOKEN = process.env.KV_REST_API_TOKEN;
-  if (!config.NVD_API_KEY) config.NVD_API_KEY = process.env.NVD_API_KEY;
+  // Fall back to env vars, including Vercel/Upstash native names.
+  if (!config.KV_REST_API_URL) {
+    config.KV_REST_API_URL =
+      readEnv("KV_REST_API_URL") ?? readEnv("UPSTASH_REDIS_REST_URL");
+  }
+  if (!config.KV_REST_API_TOKEN) {
+    config.KV_REST_API_TOKEN =
+      readEnv("KV_REST_API_TOKEN") ?? readEnv("UPSTASH_REDIS_REST_TOKEN");
+  }
+  if (!config.NVD_API_KEY) config.NVD_API_KEY = readEnv("NVD_API_KEY");
 
   return config;
 }
 
 /** Save runtime config to .secwatch-config.json and .env.local */
 export function saveRuntimeConfig(update: Partial<RuntimeConfig>): RuntimeConfig {
+  if (isManagedHosting()) {
+    throw new Error(
+      "Cette instance est hébergée sur Vercel. Configurez les variables d'environnement dans le dashboard Vercel."
+    );
+  }
+
   // Merge with existing config
   const current = getRuntimeConfig();
   const merged: RuntimeConfig = { ...current, ...update };

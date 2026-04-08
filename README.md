@@ -27,7 +27,7 @@ cd SecWatch
 npm install
 ```
 
-## Configuration
+## Configuration locale
 
 Creer un fichier `.env.local` a la racine du projet :
 
@@ -43,7 +43,26 @@ KV_REST_API_URL=
 KV_REST_API_TOKEN=
 ```
 
+En local, les credentials Redis et la cle NVD peuvent aussi etre saisis depuis la page `/admin` : l'application les persiste alors dans `.env.local` et `.secwatch-config.json`.
+
 Les credentials Twitter/X se configurent depuis la page `/admin` de l'application.
+
+## Deploiement Vercel
+
+Sur Vercel, l'application ne peut pas ecrire dans `.env.local` au runtime. Il faut donc definir les variables d'environnement dans le dashboard Vercel avant le deploiement :
+
+```env
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+NVD_API_KEY=
+```
+
+Notes :
+
+- `UPSTASH_REDIS_REST_URL` et `UPSTASH_REDIS_REST_TOKEN` sont les noms recommandes sur Vercel.
+- Les aliases `KV_REST_API_URL` et `KV_REST_API_TOKEN` restent supportes pour le developpement local.
+- Les cookies Twitter/X continuent d'etre stockes dans Redis via `/admin`, donc Redis doit etre configure des le premier deploy.
+- Apres ajout ou modification des variables d'environnement sur Vercel, redeployer l'application.
 
 ## Lancement en mode dev
 
@@ -73,7 +92,7 @@ Chaque email recu apparaitra automatiquement dans l'onglet RSS de SecWatch.
 
 ## Todo
 
-1. Ajouter les infos de connexion à Redis dans la page /admin pour éviter d'avoir à le faire manuellement dans le fichier .env.local à chaque nouveau déploiement. Si le fichier .env.local n'existe pas encore lors d'un nouveau déploiement, le créer au moment de la saisie des infos de connexion redis ou X.
+1. Ajouter une vraie stratégie "bootstrap" pour le premier déploiement Vercel si Redis n'est pas encore configuré, car la connexion Redis reste nécessaire avant de pouvoir stocker les cookies X ou les préférences.
 
 2. Ajouter des options de configuration dans la page /admin pour le contenu du brief : quelles sources doivent être affichées ou non (X/RSS/Vulns) et le niveau de gravité des vulns.
 

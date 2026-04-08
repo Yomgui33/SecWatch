@@ -1,22 +1,8 @@
 import type { Metadata } from "next";
-import { DM_Sans, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import NavLink from "@/components/ui/NavLink";
 import Logo from "@/components/ui/Logo";
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dm-sans",
-  display: "swap",
-});
-
-const instrumentSerif = Instrument_Serif({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-instrument-serif",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "SecWatch — Veille cybersécurité",
@@ -25,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" suppressHydrationWarning className={`${dmSans.variable} ${instrumentSerif.variable}`}>
+    <html lang="fr" suppressHydrationWarning>
       <head>
         {/* Empêcher le flash de thème incorrect */}
         <script
