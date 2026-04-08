@@ -46,7 +46,7 @@ function QuotedTweetBlock({ qt }: { qt: QuotedTweet }) {
       rel="noopener noreferrer"
       className="block border border-border rounded-lg p-3 hover:bg-surface-alt transition-colors mb-2"
     >
-      <div className="flex items-center gap-2 mb-1.5">
+      <div className="mb-1.5 flex flex-wrap items-center gap-2">
         {qt.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -64,7 +64,7 @@ function QuotedTweetBlock({ qt }: { qt: QuotedTweet }) {
         <span className="text-xs text-text-muted">@{qt.authorHandle}</span>
         <span className="text-xs text-text-muted">&middot; {timeAgo(qt.published)}</span>
       </div>
-      <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-line">
+      <p className="text-sm leading-relaxed whitespace-pre-line text-text-secondary [overflow-wrap:anywhere]">
         {qt.content}
       </p>
       {qt.media.length > 0 && (
@@ -96,7 +96,7 @@ export default function TweetCard({ tweet, onLinkClick }: { tweet: TweetEntry; o
 
         <div className="flex-1 min-w-0">
           {/* Header */}
-          <div className="flex items-baseline gap-2 mb-1">
+          <div className="mb-1 flex flex-wrap items-baseline gap-2">
             <span className="text-sm font-semibold text-text-primary truncate">
               {tweet.author}
             </span>
@@ -114,7 +114,7 @@ export default function TweetCard({ tweet, onLinkClick }: { tweet: TweetEntry; o
           </div>
 
           {/* Content */}
-          <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-line mb-2">
+          <p className="mb-2 text-sm leading-relaxed whitespace-pre-line text-text-secondary [overflow-wrap:anywhere]">
             {tweet.content}
           </p>
 
@@ -179,7 +179,7 @@ export default function TweetCard({ tweet, onLinkClick }: { tweet: TweetEntry; o
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => onLinkClick?.(tweet.id)}
-            className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-accent transition-colors"
+            className="inline-flex items-center gap-1 text-xs text-text-muted transition-colors hover:text-accent [overflow-wrap:anywhere]"
           >
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 3H3v10h10v-3M9 2h5v5M8 8l6-6" />

@@ -22,7 +22,7 @@ export default function LogoutButton() {
     <button
       onClick={handleLogout}
       disabled={loading}
-      className="px-2.5 py-1.5 text-[11px] sm:px-3 sm:text-xs pill disabled:opacity-50"
+      className="px-2 py-1.5 text-[10px] sm:px-3 sm:text-xs pill disabled:opacity-50"
     >
       {loading ? "Déconnexion..." : "Déconnexion"}
     </button>

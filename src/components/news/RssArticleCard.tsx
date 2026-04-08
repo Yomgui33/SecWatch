@@ -41,7 +41,7 @@ export default function RssArticleCard({ article, read, onToggleRead, onLinkClic
 
         <div className="flex-1 min-w-0">
           {/* Header */}
-          <div className="flex items-baseline gap-2 mb-1 flex-wrap">
+          <div className="mb-1 flex flex-wrap items-baseline gap-2">
             <span className="text-xs text-accent font-medium truncate">
               {article.feedName}
             </span>
@@ -55,27 +55,27 @@ export default function RssArticleCard({ article, read, onToggleRead, onLinkClic
 
           {/* Title */}
           {article.title && (
-            <h4 className="text-sm font-semibold text-text-primary mb-1 leading-snug">
+            <h4 className="mb-1 text-sm font-semibold leading-snug text-text-primary [overflow-wrap:anywhere]">
               {article.title}
             </h4>
           )}
 
           {/* Content excerpt */}
           {article.content && (
-            <p className="text-sm text-text-secondary leading-relaxed line-clamp-3 mb-2">
+            <p className="mb-2 text-sm leading-relaxed text-text-secondary line-clamp-3 [overflow-wrap:anywhere]">
               {article.content}
             </p>
           )}
 
           {/* Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {article.link && (
               <a
                 href={article.link}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => onLinkClick?.(article.id)}
-                className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-accent transition-colors"
+                className="inline-flex items-center gap-1 text-xs text-text-muted transition-colors hover:text-accent [overflow-wrap:anywhere]"
               >
                 <svg
                   width="12"

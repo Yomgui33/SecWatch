@@ -32,11 +32,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-screen bg-surface text-text-primary">
         <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md border-b border-border">
           <div className="max-w-5xl mx-auto px-4 sm:px-8 py-3 sm:h-14 sm:py-0">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
               <a href="/" className="shrink-0">
                 <Logo />
               </a>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
                 {authenticated && <LogoutButton />}
                 <ThemeToggle />
               </div>
@@ -53,7 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             )}
           </div>
         </header>
-        <main className="max-w-5xl mx-auto px-5 sm:px-8 py-8">{children}</main>
+        <main className="max-w-5xl mx-auto px-4 sm:px-8 py-8">{children}</main>
       </body>
     </html>
   );
