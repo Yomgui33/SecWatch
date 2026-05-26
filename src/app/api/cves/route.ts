@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ensureApiAuthenticated } from "@/lib/auth";
-import { fetchCvesFromVulnCheck, isoToDate } from "@/lib/sources/vulncheck/api";
-import { getDateRange } from "@/lib/sources/nvd/api";
+import { fetchCvesFromVulnCheck, getLastModRange } from "@/lib/sources/vulncheck/api";
 import type { DateFilter } from "@/lib/sources/nvd/types";
 
 export async function GET(request: NextRequest) {
@@ -13,24 +12,20 @@ export async function GET(request: NextRequest) {
   const customStart = params.get("customStart");
   const customEnd = params.get("customEnd");
 
-  let pubStartDate: string | undefined;
-  let pubEndDate: string | undefined;
+  let fetchOptions: Parameters<typeof fetchCvesFromVulnCheck>[0] = { limit: 100 };
 
   if (dateFilter === "custom" && customStart && customEnd) {
-    pubStartDate = customStart; // déjà en YYYY-MM-DD depuis le date picker
-    pubEndDate = customEnd;
+    // Mode custom : on filtre par date de publication (le choix est explicite)
+    fetchOptions = { ...fetchOptions, pubStartDate: customStart, pubEndDate: customEnd };
   } else if (dateFilter !== "custom") {
-    const range = getDateRange(dateFilter);
-    pubStartDate = isoToDate(range.start);
-    pubEndDate = isoToDate(range.end);
+    // Filtres prédéfinis : on utilise lastModified décalé de 2j pour obtenir
+    // uniquement des CVEs ayant déjà reçu leur score CVSS.
+    const range = getLastModRange(dateFilter);
+    fetchOptions = { ...fetchOptions, lastModStartDate: range.start, lastModEndDate: range.end };
   }
 
   try {
-    const result = await fetchCvesFromVulnCheck({
-      pubStartDate,
-      pubEndDate,
-      limit: 100,
-    });
+    const result = await fetchCvesFromVulnCheck(fetchOptions);
 
     return NextResponse.json(result, {
       headers: {

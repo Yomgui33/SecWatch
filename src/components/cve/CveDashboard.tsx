@@ -11,7 +11,7 @@ const ALL_SEVERITIES: CveSeverity[] = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "NON
 export default function CveDashboard() {
   const [filters, setFilters] = useState<FiltersType>({
     severities: ["CRITICAL", "HIGH"],
-    dateFilter: "24h",
+    dateFilter: "7d",
     sortBy: "date",
   });
   const [allCves, setAllCves] = useState<CveEntry[]>([]);

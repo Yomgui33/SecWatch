@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ensureApiAuthenticated } from "@/lib/auth";
-import { fetchCves, getDateRange } from "@/lib/sources/nvd/api";
+import { fetchCvesFromVulnCheck, getLastModRange } from "@/lib/sources/vulncheck/api";
+import { getDateRange } from "@/lib/sources/nvd/api";
 import { fetchAllArticles } from "@/lib/sources/rss/api";
 import { getRssFeeds, getReadIds, saveRssFeeds } from "@/lib/sources/rss/feeds";
 import { DEFAULT_FEEDS } from "@/lib/sources/rss/seed";
@@ -24,16 +25,17 @@ export async function GET() {
 
   const range = getDateRange("24h");
   const h24Ago = new Date(range.start).getTime();
+  const lastModRange = getLastModRange("24h");
   const settings = await getSettings();
 
   // Fetch all sources + read states in parallel (skip disabled sources)
   const [cvesResult, rssResult, tweetsResult, cveReadResult, tweetReadResult] = await Promise.allSettled([
-    // CVEs
+    // CVEs — requête par lastModified pour avoir des scores CVSS disponibles
     settings.briefShowCves
-      ? fetchCves({
-          pubStartDate: range.start,
-          pubEndDate: range.end,
-          resultsPerPage: 100,
+      ? fetchCvesFromVulnCheck({
+          lastModStartDate: lastModRange.start,
+          lastModEndDate: lastModRange.end,
+          limit: 100,
         })
       : Promise.resolve({ cves: [], totalResults: 0 }),
 

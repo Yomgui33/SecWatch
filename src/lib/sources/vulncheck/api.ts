@@ -13,11 +13,7 @@ interface VulnCheckMetrics {
       vectorString: string;
       baseScore: number;
       baseSeverity: string;
-      temporalScore?: number;
-      environmentalScore?: number;
     };
-    exploitabilityScore?: number;
-    impactScore?: number;
   }>;
   cvssMetricV2?: Array<{
     source: string;
@@ -37,19 +33,16 @@ interface VulnCheckCve {
   lastModified: string;
   descriptions: Array<{ lang: string; value: string }>;
   metrics: VulnCheckMetrics;
-  _timestamp: string;
-}
-
-interface VulnCheckMeta {
-  total_documents: number;
-  total_pages: number;
-  page: number;
-  limit: number;
 }
 
 interface VulnCheckResponse {
   data: VulnCheckCve[];
-  _meta: VulnCheckMeta;
+  _meta: {
+    total_documents: number;
+    total_pages: number;
+    page: number;
+    limit: number;
+  };
 }
 
 function getSeverity(metrics: VulnCheckMetrics): {
@@ -99,7 +92,46 @@ function mapCve(cve: VulnCheckCve): CveEntry {
   };
 }
 
+/** Formate une Date en YYYY-MM-DD pour VulnCheck */
+function toDateStr(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Calcule la fenêtre lastModified à utiliser pour un filtre donné.
+ *
+ * Les CVEs publiés aujourd'hui n'ont pas encore de score CVSS (analyse prend
+ * 2-3 jours). On requête donc par lastModified avec un décalage de 2 jours :
+ *   - "24h"  → modifiés entre J-3 et J-2
+ *   - "7d"   → modifiés entre J-9 et J-2
+ *   - "30d"  → modifiés entre J-32 et J-2
+ * Cela cible les CVEs qui viennent de recevoir leur score CVSS.
+ */
+export function getLastModRange(filter: "24h" | "7d" | "30d"): {
+  start: string;
+  end: string;
+} {
+  const now = new Date();
+  const ANALYSIS_LAG_DAYS = 2; // délai moyen avant qu'un CVE soit scoré
+
+  const endDate = new Date(now);
+  endDate.setDate(endDate.getDate() - ANALYSIS_LAG_DAYS);
+
+  const windowDays: Record<string, number> = {
+    "24h": 1,
+    "7d": 7,
+    "30d": 30,
+  };
+
+  const startDate = new Date(endDate);
+  startDate.setDate(startDate.getDate() - windowDays[filter]);
+
+  return { start: toDateStr(startDate), end: toDateStr(endDate) };
+}
+
 export async function fetchCvesFromVulnCheck(options: {
+  lastModStartDate?: string;
+  lastModEndDate?: string;
   pubStartDate?: string;
   pubEndDate?: string;
   limit?: number;
@@ -109,9 +141,10 @@ export async function fetchCvesFromVulnCheck(options: {
   if (!token) throw new Error("VULNCHECK_API_TOKEN non configuré.");
 
   const params = new URLSearchParams();
-  // VulnCheck attend le format YYYY-MM-DD
-  if (options.pubStartDate) params.set("pubStartDate", options.pubStartDate);
-  if (options.pubEndDate)   params.set("pubEndDate",   options.pubEndDate);
+  if (options.lastModStartDate) params.set("lastModStartDate", options.lastModStartDate);
+  if (options.lastModEndDate)   params.set("lastModEndDate",   options.lastModEndDate);
+  if (options.pubStartDate)     params.set("pubStartDate",     options.pubStartDate);
+  if (options.pubEndDate)       params.set("pubEndDate",       options.pubEndDate);
   params.set("limit", String(options.limit ?? 100));
   if (options.page && options.page > 1) params.set("page", String(options.page));
 
@@ -127,13 +160,8 @@ export async function fetchCvesFromVulnCheck(options: {
 
   const data: VulnCheckResponse = await res.json();
 
-  // VulnCheck trie par défaut en descendant (_id desc) — les plus récents en premier.
+  // VulnCheck trie par _id décroissant (plus récent en premier).
   const cves = (data.data ?? []).map(mapCve);
 
   return { cves, totalResults: data._meta?.total_documents ?? cves.length };
-}
-
-/** Convertit une date ISO (produite par getDateRange) en YYYY-MM-DD pour VulnCheck */
-export function isoToDate(iso: string): string {
-  return iso.slice(0, 10);
 }
