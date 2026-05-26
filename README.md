@@ -14,7 +14,7 @@ Cette branche correspond à la version de référence actuellement déployable e
 ## Fonctionnalités
 
 - ` / ` : brief du jour avec les nouveautés des dernières 24h
-- ` /brief ` : suivi des vulnérabilités issues de la NVD
+- ` /brief ` : suivi des vulnérabilités issues de VulnCheck
 - ` /news ` : onglets Twitter / X et RSS
 - ` /admin ` : configuration technique et préférences
 
@@ -44,6 +44,7 @@ Fonctions principales déjà en place :
 
 - Node.js 18+
 - un compte Upstash Redis
+- un token VulnCheck Community (gratuit sur [vulncheck.com](https://vulncheck.com))
 
 ## Installation locale
 
@@ -58,8 +59,8 @@ npm install
 Créer un fichier `.env.local` à la racine :
 
 ```env
-# NVD
-NVD_API_KEY=
+# VulnCheck (requis — token gratuit sur vulncheck.com)
+VULNCHECK_API_TOKEN=
 
 # Redis
 KV_REST_API_URL=
@@ -91,9 +92,9 @@ Sur Vercel, l'application ne peut pas écrire dans `.env.local` au runtime. La c
 Variables recommandées :
 
 ```env
+VULNCHECK_API_TOKEN=
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
-NVD_API_KEY=
 SECWATCH_PASSWORD=
 SECWATCH_PASSWORD_HASH=
 ```
@@ -137,10 +138,13 @@ tsc --noEmit
 
 ## Sources de données
 
-### NVD
+### VulnCheck
 
-- source des vulnérabilités affichées dans `/brief`
-- `NVD_API_KEY` est optionnelle mais recommandée pour améliorer le rate limit
+- source principale des vulnérabilités affichées dans `/brief` et `/`
+- remplace NIST NVD (arrêt de publication constaté en mai 2026)
+- tier Community gratuit, 1 000 req/min
+- les CVE sont requêtés par date de dernière modification (décalage de 2 jours) afin de ne retourner que des CVE ayant déjà reçu leur score CVSS
+- `VULNCHECK_API_TOKEN` est requis (token gratuit sur [vulncheck.com](https://vulncheck.com))
 
 ### RSS
 
@@ -181,13 +185,13 @@ Déjà implémenté :
 - branchement propre sur Vercel
 - gestion des erreurs de bootstrap et de stockage plus robuste
 - support mobile amélioré
+- migration de la source CVE vers VulnCheck NVD++ (Community)
 
 Reste à faire :
 
 1. finaliser complètement la stratégie de bootstrap sans Redis pour les fonctions non liées à l'auth
 2. continuer à affiner l'expérience mobile sur les écrans les plus étroits
-3. ajouter un favicon dédié propre à l'identité visuelle SecWatch
 
 ## Branche de déploiement
 
-La branche `Vercel` est actuellement la branche de référence pour le déploiement.
+La branche `main` est actuellement la branche de référence pour le déploiement.
