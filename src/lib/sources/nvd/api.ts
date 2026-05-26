@@ -51,40 +51,76 @@ function mapCve(cve: NvdCve): CveEntry {
   };
 }
 
-export async function fetchCves(options: {
-  pubStartDate?: string;
-  pubEndDate?: string;
-  resultsPerPage?: number;
-  startIndex?: number;
-}): Promise<{ cves: CveEntry[]; totalResults: number }> {
-  const params = new URLSearchParams();
-
-  if (options.pubStartDate) params.set("pubStartDate", options.pubStartDate);
-  if (options.pubEndDate) params.set("pubEndDate", options.pubEndDate);
-  params.set("resultsPerPage", String(options.resultsPerPage ?? 40));
-  if (options.startIndex) params.set("startIndex", String(options.startIndex));
-
-  const headers: Record<string, string> = {};
-  const apiKey = getRuntimeConfig().NVD_API_KEY;
-  if (apiKey) {
-    headers["apiKey"] = apiKey;
-  }
-
+async function nvdFetch(
+  params: URLSearchParams,
+  headers: Record<string, string>
+): Promise<NvdCveResponse> {
   const url = `${NVD_API_BASE}?${params.toString()}`;
   const res = await fetch(url, {
     headers,
-    next: { revalidate: 1800 }, // Cache 30 minutes (ISR)
+    next: { revalidate: 1800 },
   });
 
   if (!res.ok) {
     throw new Error(`NVD API error: ${res.status} ${res.statusText}`);
   }
 
-  const data: NvdCveResponse = await res.json();
+  return res.json() as Promise<NvdCveResponse>;
+}
 
-  const cves = data.vulnerabilities.map((v) => mapCve(v.cve));
+export async function fetchCves(options: {
+  pubStartDate?: string;
+  pubEndDate?: string;
+  resultsPerPage?: number;
+  startIndex?: number;
+}): Promise<{ cves: CveEntry[]; totalResults: number }> {
+  const pageSize = options.resultsPerPage ?? 40;
 
-  return { cves, totalResults: data.totalResults };
+  const baseParams = new URLSearchParams();
+  if (options.pubStartDate) baseParams.set("pubStartDate", options.pubStartDate);
+  if (options.pubEndDate) baseParams.set("pubEndDate", options.pubEndDate);
+
+  const headers: Record<string, string> = {};
+  const apiKey = getRuntimeConfig().NVD_API_KEY;
+  if (apiKey) headers["apiKey"] = apiKey;
+
+  // Si startIndex est fourni explicitement, requête directe.
+  if (options.startIndex !== undefined) {
+    const params = new URLSearchParams(baseParams);
+    params.set("resultsPerPage", String(pageSize));
+    params.set("startIndex", String(options.startIndex));
+    const data = await nvdFetch(params, headers);
+    return {
+      cves: data.vulnerabilities.map((v) => mapCve(v.cve)),
+      totalResults: data.totalResults,
+    };
+  }
+
+  // 1ère requête : 1 résultat pour connaître totalResults.
+  // L'API NVD trie par date croissante : sans ce workaround on obtiendrait
+  // uniquement les CVE les plus anciens de la fenêtre (ex. tous du premier jour).
+  const probeParams = new URLSearchParams(baseParams);
+  probeParams.set("resultsPerPage", "1");
+  const probe = await nvdFetch(probeParams, headers);
+  const totalResults = probe.totalResults;
+
+  if (totalResults === 0) {
+    return { cves: [], totalResults: 0 };
+  }
+
+  // 2ème requête : fetcher la DERNIÈRE page pour obtenir les CVE les plus récents.
+  const startIndex = Math.max(0, totalResults - pageSize);
+  const pageParams = new URLSearchParams(baseParams);
+  pageParams.set("resultsPerPage", String(pageSize));
+  pageParams.set("startIndex", String(startIndex));
+  const data = await nvdFetch(pageParams, headers);
+
+  // Trier par date de publication décroissante (plus récent en premier).
+  const cves = data.vulnerabilities
+    .map((v) => mapCve(v.cve))
+    .sort((a, b) => new Date(b.published).getTime() - new Date(a.published).getTime());
+
+  return { cves, totalResults };
 }
 
 export function getDateRange(filter: "24h" | "7d" | "30d"): { start: string; end: string } {
