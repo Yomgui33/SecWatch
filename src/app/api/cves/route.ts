@@ -31,6 +31,17 @@ export async function GET(request: NextRequest) {
       resultsPerPage: 100,
     });
 
+    // L'API NVD peut retourner totalResults > 0 mais vulnerabilities: [] quand
+    // les CVE très récents ne sont pas encore indexés ou en cas de throttling.
+    // Dans ce cas on retourne une erreur explicite plutôt qu'un tableau vide trompeur.
+    if (result.totalResults > 0 && result.cves.length === 0) {
+      console.warn(`NVD returned totalResults=${result.totalResults} but empty vulnerabilities array (throttling or indexing delay).`);
+      return NextResponse.json(
+        { error: "L'API NVD a retourné des résultats vides. Réessayez dans quelques instants ou élargissez la plage de dates." },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(result, {
       headers: {
         "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",

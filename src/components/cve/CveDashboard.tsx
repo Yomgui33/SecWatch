@@ -11,7 +11,7 @@ const ALL_SEVERITIES: CveSeverity[] = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "NON
 export default function CveDashboard() {
   const [filters, setFilters] = useState<FiltersType>({
     severities: ["CRITICAL", "HIGH"],
-    dateFilter: "24h",
+    dateFilter: "7d",
     sortBy: "date",
   });
   const [allCves, setAllCves] = useState<CveEntry[]>([]);
@@ -30,11 +30,19 @@ export default function CveDashboard() {
 
     try {
       const res = await fetch(`/api/cves?${params.toString()}`);
-      if (!res.ok) throw new Error("Erreur serveur");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Erreur serveur");
+      }
       const data = await res.json();
       setAllCves(data.cves ?? []);
-    } catch {
-      setError("Impossible de charger les CVE. Réessayez dans quelques instants.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      setError(
+        msg.includes("vides")
+          ? "L'API NVD ne répond pas encore pour cette plage de dates (indexation en cours). Essayez 7j ou 30j."
+          : "Impossible de charger les CVE. Réessayez dans quelques instants."
+      );
     } finally {
       setLoading(false);
     }
