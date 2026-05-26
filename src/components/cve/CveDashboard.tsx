@@ -36,13 +36,8 @@ export default function CveDashboard() {
       }
       const data = await res.json();
       setAllCves(data.cves ?? []);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "";
-      setError(
-        msg.includes("vides")
-          ? "L'API NVD ne répond pas encore pour cette plage de dates (indexation en cours). Essayez 7j ou 30j."
-          : "Impossible de charger les CVE. Réessayez dans quelques instants."
-      );
+    } catch {
+      setError("Impossible de charger les CVE. Réessayez dans quelques instants.");
     } finally {
       setLoading(false);
     }

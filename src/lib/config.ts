@@ -8,6 +8,7 @@ export interface RuntimeConfig {
   KV_REST_API_URL?: string;
   KV_REST_API_TOKEN?: string;
   NVD_API_KEY?: string;
+  VULNCHECK_API_TOKEN?: string;
   SECWATCH_PASSWORD_HASH?: string;
 }
 
@@ -47,6 +48,7 @@ export function getRuntimeConfig(): RuntimeConfig {
       readEnv("KV_REST_API_TOKEN") ?? readEnv("UPSTASH_REDIS_REST_TOKEN");
   }
   if (!config.NVD_API_KEY) config.NVD_API_KEY = readEnv("NVD_API_KEY");
+  if (!config.VULNCHECK_API_TOKEN) config.VULNCHECK_API_TOKEN = readEnv("VULNCHECK_API_TOKEN");
   if (!config.SECWATCH_PASSWORD_HASH) {
     config.SECWATCH_PASSWORD_HASH = readEnv("SECWATCH_PASSWORD_HASH");
   }
@@ -100,6 +102,7 @@ function writeEnvLocal(config: RuntimeConfig) {
   if (config.KV_REST_API_URL) entries.KV_REST_API_URL = config.KV_REST_API_URL;
   if (config.KV_REST_API_TOKEN) entries.KV_REST_API_TOKEN = config.KV_REST_API_TOKEN;
   if (config.NVD_API_KEY !== undefined) entries.NVD_API_KEY = config.NVD_API_KEY ?? "";
+  if (config.VULNCHECK_API_TOKEN !== undefined) entries.VULNCHECK_API_TOKEN = config.VULNCHECK_API_TOKEN ?? "";
   if (config.SECWATCH_PASSWORD_HASH !== undefined) {
     entries.SECWATCH_PASSWORD_HASH = config.SECWATCH_PASSWORD_HASH ?? "";
   }
