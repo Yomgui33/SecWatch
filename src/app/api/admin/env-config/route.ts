@@ -16,7 +16,7 @@ export async function GET() {
   return NextResponse.json({
     redisConfigured: !!(config.KV_REST_API_URL && config.KV_REST_API_TOKEN),
     redisUrl: config.KV_REST_API_URL ? maskValue(config.KV_REST_API_URL) : "",
-    nvdConfigured: !!config.NVD_API_KEY,
+    vulncheckConfigured: !!config.VULNCHECK_API_TOKEN,
     managedHosting,
     configMode: managedHosting ? "vercel-env" : "local-runtime",
   });
@@ -29,10 +29,10 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { kvUrl, kvToken, nvdApiKey } = body as {
+    const { kvUrl, kvToken, vulncheckToken } = body as {
       kvUrl?: string;
       kvToken?: string;
-      nvdApiKey?: string;
+      vulncheckToken?: string;
     };
 
     // If Redis credentials provided, test them first
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         saveRuntimeConfig({
           KV_REST_API_URL: testUrl,
           KV_REST_API_TOKEN: testToken,
-          ...(nvdApiKey !== undefined ? { NVD_API_KEY: nvdApiKey.trim() } : {}),
+          ...(vulncheckToken !== undefined ? { VULNCHECK_API_TOKEN: vulncheckToken.trim() } : {}),
         });
       } catch (error) {
         return NextResponse.json(
@@ -65,10 +65,10 @@ export async function POST(req: NextRequest) {
 
       // Reset singleton so next call uses new credentials
       resetRedis();
-    } else if (nvdApiKey !== undefined) {
-      // Only updating NVD key
+    } else if (vulncheckToken !== undefined) {
+      // Only updating VulnCheck token
       try {
-        saveRuntimeConfig({ NVD_API_KEY: nvdApiKey.trim() });
+        saveRuntimeConfig({ VULNCHECK_API_TOKEN: vulncheckToken.trim() });
       } catch (error) {
         return NextResponse.json(
           { error: error instanceof Error ? error.message : "Configuration impossible." },

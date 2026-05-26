@@ -27,7 +27,7 @@ export default async function AdminPage() {
             Connexion aux services
           </h3>
           <p className="text-sm text-text-secondary leading-relaxed">
-            Configuration de la base de données Redis (Upstash) et de la clé API NVD.
+            Configuration de la base de données Redis (Upstash) et du token VulnCheck.
           </p>
           <EnvConfigForm />
         </section>

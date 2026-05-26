@@ -17,12 +17,12 @@ export default async function VulnerabilitiesPage() {
         <p className="text-sm text-text-muted">
           Données{" "}
           <a
-            href="https://nvd.nist.gov/"
+            href="https://vulncheck.com"
             target="_blank"
             rel="noopener noreferrer"
             className="text-accent hover:underline"
           >
-            NVD
+            VulnCheck
           </a>
           {" "}· mise à jour toutes les 30 min.
         </p>

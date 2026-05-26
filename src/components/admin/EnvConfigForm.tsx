@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 interface ConfigStatus {
   redisConfigured: boolean;
   redisUrl: string;
-  nvdConfigured: boolean;
+  vulncheckConfigured: boolean;
   managedHosting: boolean;
   configMode: "vercel-env" | "local-runtime";
 }
@@ -14,11 +14,11 @@ export default function EnvConfigForm() {
   const [status, setStatus] = useState<ConfigStatus | null>(null);
   const [kvUrl, setKvUrl] = useState("");
   const [kvToken, setKvToken] = useState("");
-  const [nvdApiKey, setNvdApiKey] = useState("");
+  const [vulncheckToken, setVulncheckToken] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [showRedisForm, setShowRedisForm] = useState(false);
-  const [showNvdForm, setShowNvdForm] = useState(false);
+  const [showVulncheckForm, setShowVulncheckForm] = useState(false);
 
   const checkStatus = async () => {
     try {
@@ -65,7 +65,7 @@ export default function EnvConfigForm() {
     }
   };
 
-  const handleNvdSubmit = async (e: React.FormEvent) => {
+  const handleVulncheckSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setMessage(null);
@@ -74,7 +74,7 @@ export default function EnvConfigForm() {
       const res = await fetch("/api/admin/env-config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nvdApiKey }),
+        body: JSON.stringify({ vulncheckToken }),
       });
 
       const data = await res.json();
@@ -84,9 +84,9 @@ export default function EnvConfigForm() {
         return;
       }
 
-      setMessage({ type: "success", text: "Clé API NVD enregistrée." });
-      setNvdApiKey("");
-      setShowNvdForm(false);
+      setMessage({ type: "success", text: "Token VulnCheck enregistré." });
+      setVulncheckToken("");
+      setShowVulncheckForm(false);
       await checkStatus();
     } catch {
       setMessage({ type: "error", text: "Erreur réseau." });
@@ -102,7 +102,7 @@ export default function EnvConfigForm() {
           <p className="font-medium text-text-primary">Instance Vercel détectée</p>
           <p className="mt-1 leading-relaxed">
             Sur Vercel, SecWatch lit la configuration depuis les variables d&apos;environnement du projet.
-            Les secrets Redis et NVD doivent être définis dans le dashboard Vercel puis redéployés.
+            Les secrets Redis et VulnCheck doivent être définis dans le dashboard Vercel puis redéployés.
           </p>
         </div>
       )}
@@ -136,27 +136,27 @@ export default function EnvConfigForm() {
         </div>
       )}
 
-      {/* NVD status */}
+      {/* VulnCheck status */}
       {status && (
         <div
           className={`flex items-center gap-3 p-3 card ${
-            status.nvdConfigured
+            status.vulncheckConfigured
               ? "border-green-800/30 bg-green-900/10"
-              : "border-border bg-surface-alt"
+              : "border-severity-high/30 bg-severity-high-bg"
           }`}
         >
           <div
             className={`w-2.5 h-2.5 rounded-full shrink-0 ${
-              status.nvdConfigured ? "bg-green-600" : "bg-text-muted"
+              status.vulncheckConfigured ? "bg-green-600" : "bg-severity-high"
             }`}
           />
           <div className="text-sm">
-            {status.nvdConfigured ? (
-              <span>Clé API NVD configurée</span>
+            {status.vulncheckConfigured ? (
+              <span>Token VulnCheck configuré</span>
             ) : (
-              <span className="text-text-muted">
-                Clé API NVD non configurée{" "}
-                <span className="text-xs">(optionnelle — augmente le rate limit de 5 à 50 req/30s)</span>
+              <span className="text-severity-high">
+                Token VulnCheck non configuré{" "}
+                <span className="text-xs">(requis — les CVE ne se chargeront pas)</span>
               </span>
             )}
           </div>
@@ -173,12 +173,12 @@ export default function EnvConfigForm() {
             {status?.redisConfigured ? "Modifier la connexion Redis" : "Configurer Redis"}
           </button>
         )}
-        {!showNvdForm && !status?.managedHosting && (
+        {!showVulncheckForm && !status?.managedHosting && (
           <button
-            onClick={() => { setShowNvdForm(true); setMessage(null); }}
+            onClick={() => { setShowVulncheckForm(true); setMessage(null); }}
             className="px-4 py-2 text-sm pill"
           >
-            {status?.nvdConfigured ? "Modifier la clé NVD" : "Ajouter une clé NVD"}
+            {status?.vulncheckConfigured ? "Modifier le token VulnCheck" : "Ajouter un token VulnCheck"}
           </button>
         )}
       </div>
@@ -192,7 +192,7 @@ export default function EnvConfigForm() {
             {" "}
             <code className="font-mono">UPSTASH_REDIS_REST_TOKEN</code>,
             {" "}
-            <code className="font-mono">NVD_API_KEY</code>.
+            <code className="font-mono">VULNCHECK_API_TOKEN</code>.
           </p>
           <p className="mt-2">
             Les aliases
@@ -282,35 +282,35 @@ export default function EnvConfigForm() {
         </div>
       )}
 
-      {/* NVD form */}
-      {showNvdForm && (
+      {/* VulnCheck form */}
+      {showVulncheckForm && (
         <div className="border border-border rounded-lg p-4 space-y-4">
           <div className="space-y-2 text-sm text-text-secondary">
-            <p className="font-medium text-text-primary">Clé API NVD</p>
+            <p className="font-medium text-text-primary">Token VulnCheck</p>
             <p className="text-xs leading-relaxed">
-              Demandez une clé gratuite sur{" "}
+              Créez un compte Community gratuit sur{" "}
               <a
-                href="https://nvd.nist.gov/developers/request-an-api-key"
+                href="https://vulncheck.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-accent hover:underline"
               >
-                nvd.nist.gov
+                vulncheck.com
               </a>
-              . Sans clé, le rate limit est de 5 requêtes / 30 secondes.
+              {" "}et récupérez votre token depuis le dashboard.
             </p>
           </div>
 
-          <form onSubmit={handleNvdSubmit} className="space-y-3">
+          <form onSubmit={handleVulncheckSubmit} className="space-y-3">
             <div>
               <label className="block text-xs font-medium text-text-muted mb-1">
-                API Key
+                Token
               </label>
               <input
                 type="password"
-                value={nvdApiKey}
-                onChange={(e) => setNvdApiKey(e.target.value)}
-                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                value={vulncheckToken}
+                onChange={(e) => setVulncheckToken(e.target.value)}
+                placeholder="vulncheck_xxxxxxxxxxxxxxxxxxxxxxxx"
                 required
                 className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent text-text-primary placeholder:text-text-muted font-mono"
               />
@@ -325,7 +325,7 @@ export default function EnvConfigForm() {
               </button>
               <button
                 type="button"
-                onClick={() => { setShowNvdForm(false); setMessage(null); }}
+                onClick={() => { setShowVulncheckForm(false); setMessage(null); }}
                 className="px-4 py-2 text-sm pill"
               >
                 Annuler
