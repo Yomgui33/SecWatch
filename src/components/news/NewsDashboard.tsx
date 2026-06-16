@@ -213,12 +213,10 @@ export default function NewsDashboard() {
   // DEBUG — à retirer après diagnostic
   if (typeof window !== "undefined" && selectedFeeds.size > 0) {
     console.log("[RSS filter] selectedFeeds:", [...selectedFeeds]);
-    console.log("[RSS filter] effectiveSelectedFeeds:", [...effectiveSelectedFeeds]);
-    console.log("[RSS filter] unreadFeedIds:", unreadFeedIds ? [...unreadFeedIds] : null);
-    const leaking = dateFilteredRss.filter(a =>
-      !effectiveSelectedFeeds.has(a.feedId) && !readIds.has(a.id)
-    );
-    if (leaking.length) console.log("[RSS filter] articles qui fuient:", leaking.map(a => ({ feedName: a.feedName, feedId: a.feedId, title: a.title })));
+    // Quels feedNames sont associés au feedId sélectionné ? S'il y en a plusieurs c'est une collision.
+    const bySelectedId = dateFilteredRss.filter(a => effectiveSelectedFeeds.has(a.feedId) && !readIds.has(a.id));
+    const feedNamesInSelection = [...new Set(bySelectedId.map(a => `${a.feedName} (${a.feedId})`))];
+    console.log("[RSS filter] feedNames sous le feedId sélectionné:", feedNamesInSelection);
   }
 
   const filteredRss = dateFilteredRss.filter((a) => {
