@@ -15,11 +15,7 @@ export interface RssArticle {
   published: string;
 }
 
-/** Deterministic short ID from a URL (DJB2 hash, base36). */
+/** Feed ID from URL — uses the URL directly since URLs are already unique. */
 export function feedIdFromUrl(url: string): string {
-  let hash = 5381;
-  for (let i = 0; i < url.length; i++) {
-    hash = ((hash << 5) + hash + url.charCodeAt(i)) & 0x7fffffff;
-  }
-  return hash.toString(36);
+  return url;
 }
