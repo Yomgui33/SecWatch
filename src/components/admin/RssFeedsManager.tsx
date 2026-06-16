@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react";
 import type { RssFeed } from "@/lib/sources/rss/types";
+import { DEFAULT_FEEDS } from "@/lib/sources/rss/seed";
 
 export default function RssFeedsManager() {
+  const defaultUrls = new Set(DEFAULT_FEEDS.map((f) => f.url));
+
   const [feeds, setFeeds] = useState<RssFeed[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
@@ -117,9 +120,16 @@ export default function RssFeedsManager() {
               className="flex items-center gap-3 px-4 py-2.5"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-text-primary truncate">
-                  {feed.name}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-text-primary truncate">
+                    {feed.name}
+                  </p>
+                  {defaultUrls.has(feed.url) && (
+                    <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-surface-alt text-text-muted">
+                      défaut
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-text-muted truncate">{feed.url}</p>
               </div>
               <button
