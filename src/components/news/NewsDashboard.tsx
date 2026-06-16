@@ -210,15 +210,6 @@ export default function NewsDashboard() {
       ? new Set([...selectedFeeds].filter(id => unreadFeedIds.has(id)))
       : selectedFeeds;
 
-  // DEBUG — à retirer après diagnostic
-  if (typeof window !== "undefined" && selectedFeeds.size > 0) {
-    console.log("[RSS filter] selectedFeeds:", [...selectedFeeds]);
-    // Quels feedNames sont associés au feedId sélectionné ? S'il y en a plusieurs c'est une collision.
-    const bySelectedId = dateFilteredRss.filter(a => effectiveSelectedFeeds.has(a.feedId) && !readIds.has(a.id));
-    const feedNamesInSelection = [...new Set(bySelectedId.map(a => `${a.feedName} (${a.feedId})`))];
-    console.log("[RSS filter] feedNames sous le feedId sélectionné:", feedNamesInSelection);
-  }
-
   const filteredRss = dateFilteredRss.filter((a) => {
     if (effectiveSelectedFeeds.size > 0 && !effectiveSelectedFeeds.has(a.feedId)) return false;
     if (hideRead && readIds.has(a.id)) return false;
