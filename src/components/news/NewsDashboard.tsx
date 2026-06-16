@@ -199,8 +199,19 @@ export default function NewsDashboard() {
     return true;
   });
 
+  // When hideRead=true, feed pills with unread=0 are hidden from the UI.
+  // A hidden feed can still be in selectedFeeds (stale), causing its articles to leak through.
+  // Fix: only honour selectedFeeds entries for feeds whose pills are currently visible.
+  const unreadFeedIds = hideRead
+    ? new Set(dateFilteredRss.filter(a => !readIds.has(a.id)).map(a => a.feedId))
+    : null;
+  const effectiveSelectedFeeds =
+    hideRead && selectedFeeds.size > 0 && unreadFeedIds
+      ? new Set([...selectedFeeds].filter(id => unreadFeedIds.has(id)))
+      : selectedFeeds;
+
   const filteredRss = dateFilteredRss.filter((a) => {
-    if (selectedFeeds.size > 0 && !selectedFeeds.has(a.feedId)) return false;
+    if (effectiveSelectedFeeds.size > 0 && !effectiveSelectedFeeds.has(a.feedId)) return false;
     if (hideRead && readIds.has(a.id)) return false;
     return true;
   });
