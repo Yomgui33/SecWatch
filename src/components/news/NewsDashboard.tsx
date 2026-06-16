@@ -210,6 +210,17 @@ export default function NewsDashboard() {
       ? new Set([...selectedFeeds].filter(id => unreadFeedIds.has(id)))
       : selectedFeeds;
 
+  // DEBUG — à retirer après diagnostic
+  if (typeof window !== "undefined" && selectedFeeds.size > 0) {
+    console.log("[RSS filter] selectedFeeds:", [...selectedFeeds]);
+    console.log("[RSS filter] effectiveSelectedFeeds:", [...effectiveSelectedFeeds]);
+    console.log("[RSS filter] unreadFeedIds:", unreadFeedIds ? [...unreadFeedIds] : null);
+    const leaking = dateFilteredRss.filter(a =>
+      !effectiveSelectedFeeds.has(a.feedId) && !readIds.has(a.id)
+    );
+    if (leaking.length) console.log("[RSS filter] articles qui fuient:", leaking.map(a => ({ feedName: a.feedName, feedId: a.feedId, title: a.title })));
+  }
+
   const filteredRss = dateFilteredRss.filter((a) => {
     if (effectiveSelectedFeeds.size > 0 && !effectiveSelectedFeeds.has(a.feedId)) return false;
     if (hideRead && readIds.has(a.id)) return false;
