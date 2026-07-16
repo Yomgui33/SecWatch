@@ -1,5 +1,6 @@
 import { getRedis } from "@/lib/kv";
 import type { RssFeed } from "./types";
+import { feedIdFromUrl } from "./types";
 
 const KV_KEY = "secwatch:rss:feeds";
 const KV_READ_KEY = "secwatch:rss:read";
@@ -10,8 +11,13 @@ export async function getRssFeeds(): Promise<RssFeed[]> {
   const redis = getRedis();
   if (!redis) return [];
   try {
-    const data = await redis.get<RssFeed[]>(KV_KEY);
-    return data ?? [];
+    const data = (await redis.get<RssFeed[]>(KV_KEY)) ?? [];
+    // Normalize stale hash IDs (pre-29497a8) to URL and dedupe by URL, so
+    // article.feedId is always the unique URL — kills the hash-collision leak.
+    const seen = new Set<string>();
+    return data
+      .filter((f) => !seen.has(f.url) && seen.add(f.url))
+      .map((f) => ({ ...f, id: feedIdFromUrl(f.url) }));
   } catch {
     return [];
   }
