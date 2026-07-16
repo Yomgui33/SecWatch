@@ -319,7 +319,7 @@ export default function NewsDashboard() {
                 <div className="space-y-3">
                   {filteredRss.map((article) => (
                     <RssArticleCard
-                      key={article.id}
+                      key={`${article.feedId}::${article.id}`}
                       article={article}
                       read={readIds.has(article.id)}
                       onToggleRead={handleToggleRead}
