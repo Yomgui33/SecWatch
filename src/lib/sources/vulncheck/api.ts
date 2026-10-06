@@ -92,64 +92,80 @@ function mapCve(cve: VulnCheckCve): CveEntry {
   };
 }
 
-/** Formate une Date en YYYY-MM-DD pour VulnCheck */
+/** Formate une Date en YYYY-MM-DD (UTC) pour VulnCheck */
 function toDateStr(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-/**
- * Calcule la fenêtre lastModified à utiliser pour un filtre donné.
- *
- * Les CVEs publiés aujourd'hui n'ont pas encore de score CVSS (analyse prend
- * 2-3 jours). On requête donc par lastModified avec un décalage de 2 jours :
- *   - "24h"  → modifiés entre J-3 et J-2
- *   - "7d"   → modifiés entre J-9 et J-2
- *   - "30d"  → modifiés entre J-32 et J-2
- * Cela cible les CVEs qui viennent de recevoir leur score CVSS.
- */
-export function getLastModRange(filter: "24h" | "7d" | "30d"): {
-  start: string;
-  end: string;
-} {
-  const now = new Date();
-  const ANALYSIS_LAG_DAYS = 2; // délai moyen avant qu'un CVE soit scoré
-
-  const endDate = new Date(now);
-  endDate.setDate(endDate.getDate() - ANALYSIS_LAG_DAYS);
-
-  const windowDays: Record<string, number> = {
-    "24h": 1,
-    "7d": 7,
-    "30d": 30,
-  };
-
-  const startDate = new Date(endDate);
-  startDate.setDate(startDate.getDate() - windowDays[filter]);
-
-  return { start: toDateStr(startDate), end: toDateStr(endDate) };
+function addDays(d: Date, days: number): Date {
+  return new Date(d.getTime() + days * 86_400_000);
 }
 
-export async function fetchCvesFromVulnCheck(options: {
-  lastModStartDate?: string;
-  lastModEndDate?: string;
-  pubStartDate?: string;
-  pubEndDate?: string;
-  limit?: number;
-  page?: number;
-}): Promise<{ cves: CveEntry[]; totalResults: number }> {
-  const token = getRuntimeConfig().VULNCHECK_API_TOKEN;
-  if (!token) throw new Error("VULNCHECK_API_TOKEN non configuré.");
+export interface PublishedRange {
+  /** Borne basse incluse, timestamp ISO complet */
+  start: string;
+  /** Borne haute incluse, timestamp ISO complet */
+  end: string;
+}
 
+const WINDOW_HOURS: Record<"24h" | "7d" | "30d", number> = {
+  "24h": 24,
+  "7d": 7 * 24,
+  "30d": 30 * 24,
+};
+
+/**
+ * Fenêtre de *publication* correspondant à un filtre prédéfini : exactement les
+ * N dernières heures glissantes, se terminant maintenant.
+ *
+ * On filtre bien sur `published` et non sur `lastModified` : c'est la date que
+ * les cartes affichent, donc la seule qui rende la sélection cohérente avec ce
+ * que l'utilisateur voit. Conséquence assumée : les CVE très récentes n'ont pas
+ * encore de score CVSS (l'analyse NVD prend 2-3 jours) et apparaissent en
+ * sévérité "NONE".
+ */
+export function getPublishedRange(filter: "24h" | "7d" | "30d"): PublishedRange {
+  const now = new Date();
+  return {
+    start: new Date(now.getTime() - WINDOW_HOURS[filter] * 3_600_000).toISOString(),
+    end: now.toISOString(),
+  };
+}
+
+/**
+ * Convertit deux dates `YYYY-MM-DD` (inputs `type="date"`) en fenêtre de
+ * publication couvrant les journées complètes en UTC. Renvoie `null` si les
+ * entrées sont malformées ou inversées.
+ */
+export function parseCustomRange(start: string, end: string): PublishedRange | null {
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+  if (!DATE_RE.test(start) || !DATE_RE.test(end)) return null;
+
+  const startMs = Date.parse(`${start}T00:00:00.000Z`);
+  const endMs = Date.parse(`${end}T23:59:59.999Z`);
+  if (Number.isNaN(startMs) || Number.isNaN(endMs) || startMs > endMs) return null;
+
+  return { start: new Date(startMs).toISOString(), end: new Date(endMs).toISOString() };
+}
+
+const PAGE_SIZE = 100;
+/** Garde-fou : au-delà, on tronque en conservant les CVE les plus récentes. */
+const MAX_PAGES = 10;
+
+async function fetchPage(
+  range: PublishedRange,
+  page: number,
+  token: string
+): Promise<VulnCheckResponse> {
   const params = new URLSearchParams();
-  if (options.lastModStartDate) params.set("lastModStartDate", options.lastModStartDate);
-  if (options.lastModEndDate)   params.set("lastModEndDate",   options.lastModEndDate);
-  if (options.pubStartDate)     params.set("pubStartDate",     options.pubStartDate);
-  if (options.pubEndDate)       params.set("pubEndDate",       options.pubEndDate);
-  params.set("limit", String(options.limit ?? 100));
-  if (options.page && options.page > 1) params.set("page", String(options.page));
+  // L'API filtre à la journée : on élargit d'un jour de chaque côté pour ne pas
+  // perdre les bornes, le filtrage exact est refait ci-dessous sur `published`.
+  params.set("pubStartDate", toDateStr(addDays(new Date(range.start), -1)));
+  params.set("pubEndDate", toDateStr(addDays(new Date(range.end), 1)));
+  params.set("limit", String(PAGE_SIZE));
+  if (page > 1) params.set("page", String(page));
 
-  const url = `${VULNCHECK_API_BASE}?${params.toString()}`;
-  const res = await fetch(url, {
+  const res = await fetch(`${VULNCHECK_API_BASE}?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}` },
     next: { revalidate: 1800 },
   });
@@ -158,10 +174,51 @@ export async function fetchCvesFromVulnCheck(options: {
     throw new Error(`VulnCheck API error: ${res.status} ${res.statusText}`);
   }
 
-  const data: VulnCheckResponse = await res.json();
+  return res.json() as Promise<VulnCheckResponse>;
+}
 
-  // VulnCheck trie par _id décroissant (plus récent en premier).
-  const cves = (data.data ?? []).map(mapCve);
+/**
+ * Récupère les CVE **publiées** dans la fenêtre donnée.
+ *
+ * La fenêtre est appliquée deux fois : côté API (à la journée, en élargi) puis
+ * localement au timestamp près. Ce second passage est indispensable — sans lui,
+ * l'arrondi à la journée de VulnCheck fait remonter des CVE hors plage.
+ */
+export async function fetchCvesPublishedBetween(
+  range: PublishedRange
+): Promise<{ cves: CveEntry[]; totalResults: number }> {
+  const token = getRuntimeConfig().VULNCHECK_API_TOKEN;
+  if (!token) throw new Error("VULNCHECK_API_TOKEN non configuré.");
 
-  return { cves, totalResults: data._meta?.total_documents ?? cves.length };
+  const first = await fetchPage(range, 1, token);
+  const pages = [first];
+
+  // VulnCheck renvoie les documents du plus récent au plus ancien : les pages
+  // suivantes complètent la fenêtre vers le passé.
+  const totalPages = Math.min(first._meta?.total_pages ?? 1, MAX_PAGES);
+  if (totalPages > 1) {
+    const rest = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, i) => fetchPage(range, i + 2, token))
+    );
+    pages.push(...rest);
+  }
+
+  const startMs = Date.parse(range.start);
+  const endMs = Date.parse(range.end);
+
+  const byId = new Map<string, CveEntry>();
+  for (const page of pages) {
+    for (const raw of page.data ?? []) {
+      const cve = mapCve(raw);
+      const publishedMs = Date.parse(cve.published);
+      if (Number.isNaN(publishedMs) || publishedMs < startMs || publishedMs > endMs) continue;
+      byId.set(cve.id, cve);
+    }
+  }
+
+  const cves = [...byId.values()].sort(
+    (a, b) => Date.parse(b.published) - Date.parse(a.published)
+  );
+
+  return { cves, totalResults: cves.length };
 }

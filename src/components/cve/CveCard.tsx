@@ -32,7 +32,14 @@ export default function CveCard({ cve, onLinkClick }: { cve: CveEntry; onLinkCli
               <div className="text-[10px] uppercase tracking-wide opacity-80">{sev.label}</div>
             </div>
           ) : (
-            <div className="text-xs uppercase tracking-wide">N/A</div>
+            <div
+              className="text-[10px] text-center leading-tight uppercase tracking-wide"
+              title="Score CVSS en attente : l'analyse NVD intervient en général 2 à 3 jours après la publication."
+            >
+              Score
+              <br />
+              en attente
+            </div>
           )}
         </div>
 

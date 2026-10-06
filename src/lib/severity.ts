@@ -29,7 +29,7 @@ export const SEVERITY_CONFIG: Record<
     order: 3,
   },
   NONE: {
-    label: "Aucune",
+    label: "Non scorée",
     textClass: "text-severity-none",
     bgClass: "bg-severity-none-bg",
     order: 4,

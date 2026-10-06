@@ -19,24 +19,33 @@ export default function CveDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
+    const params = new URLSearchParams({ dateFilter: filters.dateFilter });
+    if (filters.dateFilter === "custom") {
+      // Tant que la plage est incomplète, inutile d'appeler l'API.
+      if (!filters.customStart || !filters.customEnd) {
+        setAllCves([]);
+        setLoading(false);
+        setError(null);
+        return;
+      }
+      params.set("customStart", filters.customStart);
+      params.set("customEnd", filters.customEnd);
+    }
+
     setLoading(true);
     setError(null);
 
-    const params = new URLSearchParams({ dateFilter: filters.dateFilter });
-    if (filters.dateFilter === "custom") {
-      if (filters.customStart) params.set("customStart", filters.customStart);
-      if (filters.customEnd) params.set("customEnd", filters.customEnd);
-    }
-
     try {
       const res = await fetch(`/api/cves?${params.toString()}`);
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? "Erreur serveur");
+        setAllCves([]);
+        setError(data.error ?? "Impossible de charger les CVE. Réessayez dans quelques instants.");
+        return;
       }
-      const data = await res.json();
       setAllCves(data.cves ?? []);
     } catch {
+      setAllCves([]);
       setError("Impossible de charger les CVE. Réessayez dans quelques instants.");
     } finally {
       setLoading(false);
@@ -61,9 +70,30 @@ export default function CveDashboard() {
       return new Date(b.published).getTime() - new Date(a.published).getTime();
     });
 
+  // Les CVE publiées très récemment n'ont pas encore de score CVSS : si le
+  // filtre de sévérité les écarte, on le dit plutôt que de laisser une liste
+  // vide inexpliquée.
+  const hidden = allCves.length - filtered.length;
+  const hiddenUnscored = allCves.filter(
+    (cve) => cve.severity === "NONE" && !filters.severities.includes("NONE")
+  ).length;
+
   return (
     <div className="space-y-6">
       <CveFilters filters={filters} onChange={setFilters} totalResults={filtered.length} />
+
+      {!loading && !error && hidden > 0 && (
+        <p className="text-xs text-text-muted">
+          {hidden} CVE publiée{hidden > 1 ? "s" : ""} sur cette période
+          {hidden > 1 ? " sont masquées" : " est masquée"} par le filtre de sévérité
+          {hiddenUnscored > 0 && (
+            <>
+              , dont {hiddenUnscored} en attente de score CVSS
+            </>
+          )}
+          .
+        </p>
+      )}
 
       {loading ? (
         <div className="space-y-3">
