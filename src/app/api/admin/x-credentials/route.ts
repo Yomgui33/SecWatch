@@ -19,6 +19,19 @@ export async function GET() {
   }
 
   const result = await verifyCredentials(creds);
+
+  // Le handle stocké a pu être renseigné par l'ancienne détection, qui prenait
+  // un compte tiers des notifications. Dès qu'on dispose du compte réel, on
+  // corrige l'enregistrement pour ne pas le réafficher hors ligne.
+  if (result.screenName && result.screenName !== creds.screenName) {
+    try {
+      await saveXCredentials({ ...creds, screenName: result.screenName });
+    } catch {
+      // Redis indisponible (ou credentials issus des variables d'env) : sans
+      // gravité, l'affichage utilise de toute façon la valeur fraîche.
+    }
+  }
+
   return NextResponse.json({
     configured: true,
     valid: result.valid,

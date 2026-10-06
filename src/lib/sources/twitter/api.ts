@@ -335,34 +335,46 @@ export async function fetchHomeTimeline(
 
 // --- Vérification des credentials ---
 
+const ACCOUNT_SETTINGS_URL = "https://x.com/i/api/1.1/account/settings.json";
+const NOTIFICATIONS_URL = "https://x.com/i/api/2/notifications/all.json?count=1";
+
+/**
+ * Vérifie les cookies et identifie le compte réellement authentifié.
+ *
+ * On interroge `account/settings.json`, qui décrit la session elle-même : son
+ * `screen_name` est celui du porteur des cookies. Ne jamais déduire le compte
+ * connecté d'un flux de contenu — `globalObjects.users` des notifications
+ * liste les comptes *cités* dans les notifications, ce qui faisait afficher un
+ * handle tiers en guise de compte connecté.
+ */
 export async function verifyCredentials(
   creds: XCredentials
 ): Promise<{ valid: boolean; screenName?: string }> {
   try {
-    // Utiliser l'endpoint notifications (v2) qui fonctionne encore et retourne l'utilisateur
-    const url = "https://x.com/i/api/2/notifications/all.json?count=1";
-    const res = await fetch(url, {
-      headers: getAuthHeaders(creds),
+    const res = await fetch(ACCOUNT_SETTINGS_URL, {
+      headers: { ...getAuthHeaders(creds), "x-twitter-auth-type": "OAuth2Session" },
       signal: AbortSignal.timeout(10000),
     });
 
-    if (!res.ok) return { valid: false };
+    if (res.status === 401 || res.status === 403) return { valid: false };
 
-    const data = await res.json();
+    if (res.ok) {
+      const data = await res.json();
+      const screenName = typeof data?.screen_name === "string" ? data.screen_name : undefined;
+      return screenName ? { valid: true, screenName } : { valid: true };
+    }
+  } catch {
+    // Endpoint indisponible : on bascule sur le contrôle de validité ci-dessous.
+  }
 
-    // Extraire le screen_name du premier utilisateur (le compte connecté)
-    const users = data?.globalObjects?.users;
-    if (!users) return { valid: true }; // Valide mais pas de screen_name
-
-    // Le premier utilisateur dans l'objet est généralement le compte connecté
-    const firstUser = Object.values(users)[0] as
-      | { screen_name?: string }
-      | undefined;
-
-    return {
-      valid: true,
-      screenName: firstUser?.screen_name,
-    };
+  // Repli : statuer uniquement sur la validité des cookies, sans tenter de
+  // déduire un handle — mieux vaut aucun nom qu'un nom faux.
+  try {
+    const res = await fetch(NOTIFICATIONS_URL, {
+      headers: getAuthHeaders(creds),
+      signal: AbortSignal.timeout(10000),
+    });
+    return { valid: res.ok };
   } catch {
     return { valid: false };
   }
