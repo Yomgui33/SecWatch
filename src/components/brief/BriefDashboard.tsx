@@ -7,6 +7,8 @@ import type { TweetEntry } from "@/lib/sources/twitter/types";
 import CveCard from "@/components/cve/CveCard";
 import RssArticleCard from "@/components/news/RssArticleCard";
 import TweetCard from "@/components/news/TweetCard";
+import { SectionHeader, MarkReadButton } from "@/components/ui/FeedSection";
+import { refreshPeaksysUnread } from "@/components/peaksys/unreadStore";
 
 interface BriefSettings {
   briefShowCves: boolean;
@@ -24,63 +26,6 @@ interface BriefData {
   cveReadIds: string[];
   tweetReadIds: string[];
   settings?: BriefSettings;
-}
-
-function SectionHeader({
-  title,
-  count,
-  icon,
-  collapsed,
-  onToggleCollapse,
-  onMarkAllRead,
-}: {
-  title: string;
-  count: number;
-  icon: string;
-  collapsed: boolean;
-  onToggleCollapse: () => void;
-  onMarkAllRead: () => void;
-}) {
-  return (
-    <div className="flex items-center gap-2.5 mb-4">
-      <button
-        onClick={onToggleCollapse}
-        className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity"
-      >
-        <span
-          className={`text-[10px] text-text-muted transition-transform ${
-            collapsed ? "" : "rotate-90"
-          }`}
-        >
-          ▶
-        </span>
-        <span className="text-base">{icon}</span>
-        <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider">
-          {title}
-        </h3>
-      </button>
-      <span className="px-2 py-0.5 text-[11px] rounded-full bg-surface-alt text-text-muted font-medium">
-        {count}
-      </span>
-      <button
-        onClick={onMarkAllRead}
-        className="ml-auto pill !py-1 !px-3 !text-[11px]"
-      >
-        Tout marquer lu
-      </button>
-    </div>
-  );
-}
-
-function MarkReadButton({ read, onToggle }: { read: boolean; onToggle: () => void }) {
-  return (
-    <button
-      onClick={onToggle}
-      className="mt-1 text-xs text-text-muted hover:text-accent transition-colors cursor-pointer"
-    >
-      {read ? "Marquer non lu" : "Marquer lu"}
-    </button>
-  );
 }
 
 export default function BriefDashboard() {
@@ -159,6 +104,8 @@ export default function BriefDashboard() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...body, id, read }),
         });
+        // L'état lu est partagé avec l'onglet Peaksys
+        refreshPeaksysUnread({ force: true });
       } catch {
         setter((prev) => {
           const next = new Set(prev);
@@ -184,6 +131,8 @@ export default function BriefDashboard() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...body, ids }),
         });
+        // L'état lu est partagé avec l'onglet Peaksys
+        refreshPeaksysUnread({ force: true });
       } catch { /* optimistic */ }
     };
   };

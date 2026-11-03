@@ -33,6 +33,9 @@ interface VulnCheckCve {
   lastModified: string;
   descriptions: Array<{ lang: string; value: string }>;
   metrics: VulnCheckMetrics;
+  configurations?: Array<{
+    nodes?: Array<{ cpeMatch?: Array<{ criteria: string }> }>;
+  }>;
 }
 
 interface VulnCheckResponse {
@@ -78,6 +81,20 @@ function getDescription(descriptions: VulnCheckCve["descriptions"]): string {
   return en?.value ?? "Aucune description disponible.";
 }
 
+/** Couples `vendor:product` uniques extraits des CPE (`cpe:2.3:a:vendor:product:...`). */
+function getProducts(configurations: VulnCheckCve["configurations"]): string[] {
+  const products = new Set<string>();
+  for (const config of configurations ?? []) {
+    for (const node of config.nodes ?? []) {
+      for (const match of node.cpeMatch ?? []) {
+        const [, , , vendor, product] = match.criteria.split(":");
+        if (vendor && product) products.add(`${vendor}:${product}`);
+      }
+    }
+  }
+  return [...products];
+}
+
 function mapCve(cve: VulnCheckCve): CveEntry {
   const { score, severity, vectorString } = getSeverity(cve.metrics ?? {});
   return {
@@ -89,6 +106,7 @@ function mapCve(cve: VulnCheckCve): CveEntry {
     severity,
     vectorString,
     nvdUrl: `https://nvd.nist.gov/vuln/detail/${cve.id}`,
+    products: getProducts(cve.configurations),
   };
 }
 

@@ -3,6 +3,7 @@ import PasswordSettingsForm from "@/components/admin/PasswordSettingsForm";
 import XCredentialsForm from "@/components/admin/XCredentialsForm";
 import RssFeedsManager from "@/components/admin/RssFeedsManager";
 import SettingsForm from "@/components/admin/SettingsForm";
+import PeaksysTopicsManager from "@/components/admin/PeaksysTopicsManager";
 import { requirePageAuth } from "@/lib/auth";
 
 export const metadata = {
@@ -49,6 +50,19 @@ export default async function AdminPage() {
             Préférences
           </h3>
           <SettingsForm />
+        </section>
+
+        <section className="space-y-4">
+          <h3 className="text-sm font-medium uppercase tracking-wider text-text-muted">
+            Sujets Peaksys
+          </h3>
+          <p className="text-sm text-text-secondary leading-relaxed">
+            Technologies surveillées dans l&apos;onglet Peaksys : toute CVE, tout
+            article RSS ou tweet qui en mentionne une y remonte, quelle que soit
+            sa criticité. La recherche porte sur le mot entier et ignore la casse ;
+            ajoutez des variantes pour les autres écritures (ex : « NextJS »).
+          </p>
+          <PeaksysTopicsManager />
         </section>
 
         <section className="space-y-4">

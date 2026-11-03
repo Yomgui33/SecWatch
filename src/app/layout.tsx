@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import NavLink from "@/components/ui/NavLink";
+import PeaksysNavLink from "@/components/ui/PeaksysNavLink";
 import Logo from "@/components/ui/Logo";
 import LogoutButton from "@/components/auth/LogoutButton";
 import { isCurrentSessionAuthenticated } from "@/lib/auth";
@@ -41,6 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <nav className="hidden sm:block">
                     <div className="flex items-center gap-1">
                       <NavLink href="/">Brief</NavLink>
+                      <PeaksysNavLink />
                       <NavLink href="/brief">Vulnérabilités</NavLink>
                       <NavLink href="/news">News</NavLink>
                       <NavLink href="/admin">Admin</NavLink>
@@ -57,6 +59,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <nav className="-mx-4 mt-3 overflow-x-auto px-4 sm:mx-0 sm:mt-0 sm:overflow-visible sm:px-0">
                 <div className="flex min-w-max items-center gap-1 sm:hidden">
                   <NavLink href="/">Brief</NavLink>
+                  <PeaksysNavLink />
                   <NavLink href="/brief">Vulnérabilités</NavLink>
                   <NavLink href="/news">News</NavLink>
                   <NavLink href="/admin">Admin</NavLink>

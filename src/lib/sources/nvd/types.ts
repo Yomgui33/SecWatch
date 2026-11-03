@@ -65,6 +65,8 @@ export interface CveEntry {
   severity: CveSeverity;
   vectorString: string | null;
   nvdUrl: string;
+  /** Produits affectés, au format `vendor:product` (issus des CPE) */
+  products?: string[];
 }
 
 export type CveSeverity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "NONE";
