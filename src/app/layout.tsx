@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import RefreshButton from "@/components/ui/RefreshButton";
 import NavLink from "@/components/ui/NavLink";
 import PeaksysNavLink from "@/components/ui/PeaksysNavLink";
 import Logo from "@/components/ui/Logo";
@@ -51,6 +52,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 )}
               </div>
               <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+                {authenticated && <RefreshButton />}
                 {authenticated && <LogoutButton />}
                 <ThemeToggle />
               </div>

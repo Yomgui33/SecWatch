@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { CveEntry, CveFilters as FiltersType, CveSeverity } from "@/lib/sources/nvd/types";
 import { SEVERITY_CONFIG } from "@/lib/severity";
+import { fetchCached, useCacheVersion } from "@/lib/clientCache";
 import CveFilters from "./CveFilters";
 import CveList from "./CveList";
 
@@ -17,6 +18,7 @@ export default function CveDashboard() {
   const [allCves, setAllCves] = useState<CveEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const cacheVersion = useCacheVersion();
 
   const fetchData = useCallback(async () => {
     const params = new URLSearchParams({ dateFilter: filters.dateFilter });
@@ -36,9 +38,10 @@ export default function CveDashboard() {
     setError(null);
 
     try {
-      const res = await fetch(`/api/cves?${params.toString()}`);
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
+      const { ok, data } = await fetchCached<{ cves?: CveEntry[]; error?: string }>(
+        `/api/cves?${params.toString()}`
+      );
+      if (!ok) {
         setAllCves([]);
         setError(data.error ?? "Impossible de charger les CVE. Réessayez dans quelques instants.");
         return;
@@ -50,7 +53,7 @@ export default function CveDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [filters.dateFilter, filters.customStart, filters.customEnd]);
+  }, [filters.dateFilter, filters.customStart, filters.customEnd, cacheVersion]);
 
   useEffect(() => {
     fetchData();

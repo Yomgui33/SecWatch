@@ -9,6 +9,7 @@ import RssArticleCard from "@/components/news/RssArticleCard";
 import TweetCard from "@/components/news/TweetCard";
 import { SectionHeader, MarkReadButton } from "@/components/ui/FeedSection";
 import { refreshPeaksysUnread } from "@/components/peaksys/unreadStore";
+import { fetchCached, fetchReadIds, useCacheVersion } from "@/lib/clientCache";
 
 interface BriefSettings {
   briefShowCves: boolean;
@@ -46,15 +47,23 @@ export default function BriefDashboard() {
     briefMinSeverity: "CRITICAL",
   });
 
+  const cacheVersion = useCacheVersion();
+
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
     (async () => {
       try {
-        const [briefRes, settingsRes] = await Promise.all([
-          fetch("/api/brief"),
+        const [brief, settingsRes] = await Promise.all([
+          fetchCached<BriefData>("/api/brief"),
           fetch("/api/admin/settings"),
         ]);
-        if (!briefRes.ok) throw new Error();
-        const json: BriefData = await briefRes.json();
+        if (!brief.ok) throw new Error();
+        const json: BriefData = brief.fromCache
+          ? { ...brief.data, ...(await fetchReadIds()) }
+          : brief.data;
+        if (cancelled) return;
         setData(json);
         setRssReadIds(new Set(json.rssReadIds ?? []));
         setCveReadIds(new Set(json.cveReadIds ?? []));
@@ -63,12 +72,15 @@ export default function BriefDashboard() {
         const settings = await settingsRes.json().catch(() => ({}));
         setAutoMarkRead(settings.autoMarkReadOnClick ?? true);
       } catch {
-        setError("Impossible de charger le brief.");
+        if (!cancelled) setError("Impossible de charger le brief.");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [cacheVersion]);
 
   // --- Sync RSS read state on tab focus ---
   useEffect(() => {

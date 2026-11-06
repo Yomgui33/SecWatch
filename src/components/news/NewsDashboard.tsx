@@ -8,6 +8,7 @@ import NewsFilters from "./NewsFilters";
 import TweetCard from "./TweetCard";
 import RssArticleCard from "./RssArticleCard";
 import RssFeedFilter from "./RssFeedFilter";
+import { fetchCached, useCacheVersion } from "@/lib/clientCache";
 
 export default function NewsDashboard() {
   const DEFAULT_DATE: Record<string, FiltersType["dateFilter"]> = {
@@ -60,14 +61,15 @@ export default function NewsDashboard() {
     setCredentialsError(null);
 
     try {
-      const res = await fetch("/api/news/tweets");
-      const data = await res.json();
+      const { ok, data } = await fetchCached<{ tweets?: TweetEntry[]; error?: string; message?: string }>(
+        "/api/news/tweets"
+      );
 
       if (data.error === "credentials_missing" || data.error === "cookies_expired") {
-        setCredentialsError(data.message);
+        setCredentialsError(data.message ?? null);
         return;
       }
-      if (!res.ok) throw new Error("Erreur serveur");
+      if (!ok) throw new Error("Erreur serveur");
 
       setTweets(data.tweets ?? []);
       twitterFetched.current = true;
@@ -85,16 +87,16 @@ export default function NewsDashboard() {
     setRssError(null);
 
     try {
-      const [articlesRes, readRes] = await Promise.all([
-        fetch("/api/news/rss"),
+      // L'état lu n'est pas mis en cache : il change depuis les autres onglets
+      const [articles, readRes] = await Promise.all([
+        fetchCached<{ articles?: RssArticle[] }>("/api/news/rss"),
         fetch("/api/news/rss/read"),
       ]);
-      const articlesData = await articlesRes.json();
       const readData = await readRes.json();
 
-      if (!articlesRes.ok) throw new Error("Erreur serveur");
+      if (!articles.ok) throw new Error("Erreur serveur");
 
-      setRssArticles(articlesData.articles ?? []);
+      setRssArticles(articles.data.articles ?? []);
       setReadIds(new Set(readData.readIds ?? []));
       rssFetched.current = true;
     } catch {
@@ -104,11 +106,18 @@ export default function NewsDashboard() {
     }
   }, []);
 
-  // --- Fetch on source change ---
+  // --- Fetch on source change (ou après un rafraîchissement manuel) ---
+  const cacheVersion = useCacheVersion();
+  const seenCacheVersion = useRef(cacheVersion);
   useEffect(() => {
+    if (seenCacheVersion.current !== cacheVersion) {
+      seenCacheVersion.current = cacheVersion;
+      twitterFetched.current = false;
+      rssFetched.current = false;
+    }
     if (filters.activeSource === "twitter") fetchTweets();
     if (filters.activeSource === "rss") fetchRss();
-  }, [filters.activeSource, fetchTweets, fetchRss]);
+  }, [filters.activeSource, fetchTweets, fetchRss, cacheVersion]);
 
   // --- Sync RSS read state on tab focus ---
   useEffect(() => {

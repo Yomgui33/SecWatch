@@ -10,6 +10,7 @@ import RssArticleCard from "@/components/news/RssArticleCard";
 import TweetCard from "@/components/news/TweetCard";
 import { SectionHeader, MarkReadButton } from "@/components/ui/FeedSection";
 import { setPeaksysUnread } from "./unreadStore";
+import { fetchCached, fetchReadIds, useCacheVersion } from "@/lib/clientCache";
 
 type PeaksysWindow = "24h" | "7d";
 type WithTopics<T> = T & { topics: string[] };
@@ -62,6 +63,7 @@ export default function PeaksysDashboard() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const toggleCollapse = (key: string) =>
     setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
+  const cacheVersion = useCacheVersion();
 
   useEffect(() => {
     let cancelled = false;
@@ -70,11 +72,13 @@ export default function PeaksysDashboard() {
     (async () => {
       try {
         const [res, settingsRes] = await Promise.all([
-          fetch(`/api/peaksys?window=${period}`),
+          fetchCached<PeaksysData>(`/api/peaksys?window=${period}`),
           fetch("/api/admin/settings"),
         ]);
         if (!res.ok) throw new Error();
-        const json: PeaksysData = await res.json();
+        const json: PeaksysData = res.fromCache
+          ? { ...res.data, ...(await fetchReadIds()) }
+          : res.data;
         if (cancelled) return;
         setData(json);
         setCveReadIds(new Set(json.cveReadIds));
@@ -91,7 +95,7 @@ export default function PeaksysDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [period]);
+  }, [period, cacheVersion]);
 
   // --- Garder la pastille de l'onglet synchronisée (non lus sur 24 h) ---
   useEffect(() => {
